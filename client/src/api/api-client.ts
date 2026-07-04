@@ -31,14 +31,31 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || 'API request failed');
+    const errBody = await response.json().catch(() => ({}));
+    // Server GlobalExceptionFilter returns { message } or { message: [...] }
+    const msg = Array.isArray(errBody.message)
+      ? errBody.message.join(', ')
+      : errBody.message || response.statusText || 'API request failed';
+    throw new Error(msg);
   }
 
   // Handle 204 No Content
-  if (response.status === 204) return {} as T;
+  if (response.status === 204) return undefined as unknown as T;
 
-  return response.json();
+  const json = await response.json();
+
+  // Unwrap the server's ResponseInterceptor envelope: { success, data, timestamp }
+  if (
+    json !== null &&
+    typeof json === 'object' &&
+    'success' in json &&
+    'data' in json
+  ) {
+    return json.data as T;
+  }
+
+  // Plain response (e.g. health check, or responses that bypass the interceptor)
+  return json as T;
 }
 
 export const api = {

@@ -10,7 +10,8 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import { OrganizationsService } from './organizations.service';
 import {
   CreateOrganizationDto,
@@ -19,13 +20,35 @@ import {
 } from './dto/organization.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { User } from '../../common/decorators/user.decorator';
+import { MailService } from '../mail/mail.service';
+
+export class InviteMemberDto {
+  @ApiProperty({ example: 'colleague@company.com', description: 'Email to invite' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: 'MEMBER', required: false, description: 'Role to assign on join' })
+  @IsOptional() @IsString()
+  role?: string;
+
+  @ApiProperty({ example: 'John Doe', required: false })
+  @IsOptional() @IsString()
+  inviterName?: string;
+
+  @ApiProperty({ example: 'Acme Corp', required: false })
+  @IsOptional() @IsString()
+  orgName?: string;
+}
 
 @ApiTags('Organizations')
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
 @Controller('organizations')
 export class OrganizationsController {
-  constructor(private readonly orgsService: OrganizationsService) {}
+  constructor(
+    private readonly orgsService: OrganizationsService,
+    private readonly mailService: MailService,
+  ) {}
 
   // ── Org CRUD ────────────────────────────────────────────────────────────────
 
@@ -93,5 +116,28 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Remove a member from the organization' })
   removeMember(@Param('memberId') memberId: string, @User('sub') userId: string) {
     return this.orgsService.removeMember(memberId, userId);
+  }
+
+  // ── Invite ──────────────────────────────────────────────────────────────────
+
+  @Post(':id/invite')
+  @ApiOperation({ summary: 'Send an email invitation to join the organization' })
+  async invite(
+    @Param('id') orgId: string,
+    @User('sub') userId: string,
+    @Body() dto: InviteMemberDto,
+  ) {
+    // Build a simple invite URL (the recipient clicks it, then signs up / logs in)
+    const appUrl   = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const inviteUrl = `${appUrl}?invite=${orgId}&email=${encodeURIComponent(dto.email)}`;
+
+    this.mailService.sendInvite({
+      to:          dto.email,
+      orgName:     dto.orgName     ?? 'our organization',
+      inviterName: dto.inviterName ?? 'A team member',
+      inviteUrl,
+    });
+
+    return { success: true, inviteUrl };
   }
 }

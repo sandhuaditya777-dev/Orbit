@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Orbit, LogOut, Activity, Server, Database, ChevronRight,
-  Columns2, BarChart2,
+  Columns2, BarChart2, CalendarDays, UserPlus,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
@@ -22,6 +22,9 @@ import NotificationsBell from '@/modules/notifications/notifications-bell';
 import LandingPage from '@/modules/auth/LandingPage';
 import CommandPalette from '@/modules/search/command-palette';
 import AnalyticsPanel from '@/modules/project/analytics-panel';
+import CalendarView from '@/modules/project/calendar-view';
+import ThemeToggle from '@/modules/ui/theme-toggle';
+import InviteMemberDialog from '@/modules/org/invite-member-dialog';
 import { Button } from '@/components/ui/button';
 import {
   SidebarProvider,
@@ -46,7 +49,8 @@ export default function Home() {
 
   const [wsDialogOpen, setWsDialogOpen] = useState(false);
   const [projDialogOpen, setProjDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'kanban' | 'analytics'>('kanban');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'kanban' | 'analytics' | 'calendar'>('kanban');
 
   // Health check
   const { data: healthData, error: healthError } = useQuery({
@@ -212,12 +216,34 @@ export default function Home() {
                 >
                   <BarChart2 size={12} /> Analytics
                 </button>
+                <button
+                  id="view-calendar-btn"
+                  onClick={() => setViewMode('calendar')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    viewMode === 'calendar'
+                      ? 'bg-slate-800 text-slate-100 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  <CalendarDays size={12} /> Calendar
+                </button>
               </div>
             )}
 
-            {/* API Status + Notifications */}
+            {/* API Status + Notifications + Theme */}
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell />
+              <ThemeToggle />
+              {activeOrgId && (
+                <button
+                  id="invite-member-btn"
+                  onClick={() => setInviteOpen(true)}
+                  title="Invite team member"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 text-xs font-medium transition-all cursor-pointer"
+                >
+                  <UserPlus size={13} /> Invite
+                </button>
+              )}
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
                 apiOnline
                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -300,11 +326,13 @@ export default function Home() {
                       projectName={activeProject?.name ?? 'Project'}
                       statuses={activeProject?.statuses ?? ['To Do', 'In Progress', 'In Review', 'Completed']}
                     />
-                  ) : (
+                  ) : viewMode === 'analytics' ? (
                     <AnalyticsPanel
                       projectId={activeProjectId}
                       memberMap={{}}
                     />
+                  ) : (
+                    <CalendarView projectId={activeProjectId} />
                   )}
                 </motion.div>
               )}
@@ -330,6 +358,15 @@ export default function Home() {
           workspaceId={activeWorkspaceId}
           organizationId={activeOrgId!}
           onCreated={(id) => setActiveProjectId(id)}
+        />
+      )}
+
+      {activeOrgId && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          orgId={activeOrgId}
+          orgName={"your organization"}
         />
       )}
     </SidebarProvider>

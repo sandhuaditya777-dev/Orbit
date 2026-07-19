@@ -56,16 +56,6 @@ export class CreateTaskDto {
   @IsOptional()
   assigneeId?: string;
 
-  @ApiPropertyOptional({ example: 5 })
-  @IsNumber()
-  @IsOptional()
-  storyPoints?: number;
-
-  @ApiPropertyOptional({ example: '2026-06-20' })
-  @IsDateString()
-  @IsOptional()
-  startDate?: string;
-
   @ApiPropertyOptional({ example: '2026-06-30' })
   @IsDateString()
   @IsOptional()
@@ -121,16 +111,6 @@ export class UpdateTaskDto {
   @IsString()
   @IsOptional()
   assigneeId?: string;
-
-  @ApiPropertyOptional()
-  @IsNumber()
-  @IsOptional()
-  storyPoints?: number;
-
-  @ApiPropertyOptional()
-  @IsDateString()
-  @IsOptional()
-  startDate?: string;
 
   @ApiPropertyOptional()
   @IsDateString()

@@ -36,7 +36,7 @@ function Auth0Sync({ children }: { children: React.ReactNode }) {
             roles: (auth0User['https://cosync.com/roles'] as string[]) || ['member'],
           };
 
-          login(token, mappedUser);
+          login(mappedUser);
         } catch (error) {
           console.error('Error fetching Auth0 access token:', error);
           localStorage.removeItem('orbit_token');

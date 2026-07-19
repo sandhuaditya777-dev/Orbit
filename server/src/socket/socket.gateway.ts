@@ -109,11 +109,9 @@ export class SocketGateway
     if (presence) {
       // Only remove from presence if user has no other sockets in room
       const userSockets = this.userSockets.get(userId);
-      const stillInRoom = userSockets
-        ? [...userSockets].some((sid) => {
-            const s = this.server.sockets.sockets.get(sid);
-            return s && s.rooms.has(room);
-          })
+      const socketsInRoom = this.server?.sockets?.adapter?.rooms?.get(room);
+      const stillInRoom = userSockets && socketsInRoom
+        ? [...userSockets].some((sid) => socketsInRoom.has(sid))
         : false;
 
       if (!stillInRoom) {

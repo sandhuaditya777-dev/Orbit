@@ -6,11 +6,12 @@ import { useSocketStore } from '@/store/socket.store';
 import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket';
 
 export default function SocketProvider({ children }: { children: React.ReactNode }) {
-  const { token, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { setConnected, setRoomPresence } = useSocketStore();
   const initialized = useRef(false);
 
   useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('orbit_token') : null;
     if (!isAuthenticated || !token) {
       disconnectSocket();
       setConnected(false);
@@ -46,7 +47,7 @@ export default function SocketProvider({ children }: { children: React.ReactNode
       socket.off('connect_error');
       socket.off('presence:update');
     };
-  }, [isAuthenticated, token, setConnected, setRoomPresence]);
+  }, [isAuthenticated, setConnected, setRoomPresence]);
 
   return <>{children}</>;
 }

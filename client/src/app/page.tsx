@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Orbit, LogOut, Activity, Server, Database, ChevronRight,
-  Columns2, BarChart2, CalendarDays, UserPlus,
+  Orbit, LogOut, ChevronRight, Columns2, BarChart2, CalendarDays, UserPlus,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
@@ -19,7 +18,6 @@ import ProjectList from '@/modules/project/project-list';
 import CreateProjectDialog from '@/modules/project/create-project-dialog';
 import KanbanBoard from '@/modules/tasks/kanban-board';
 import NotificationsBell from '@/modules/notifications/notifications-bell';
-import LandingPage from '@/modules/auth/LandingPage';
 import CommandPalette from '@/modules/search/command-palette';
 import AnalyticsPanel from '@/modules/project/analytics-panel';
 import CalendarView from '@/modules/project/calendar-view';
@@ -72,16 +70,17 @@ export default function Home() {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  // Redirect to Auth0 login automatically if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
+
   if (error) return <ErrorScreen error={error} handleLogout={handleLogout} />;
-  if (isLoading) return <LoadingScreen />;
-
-  // ── Show premium landing page for unauthenticated users ──
-  if (!isAuthenticated) {
-    return <LandingPage onLogin={() => loginWithRedirect()} />;
-  }
+  if (isLoading || !isAuthenticated) return <LoadingScreen />;
 
 
-  const apiOnline = !!healthData && !healthError;
 
   return (
     <SidebarProvider>
@@ -97,9 +96,6 @@ export default function Home() {
                 <Orbit className="h-4 w-4 text-white" />
               </div>
               <span className="font-extrabold text-white tracking-tight">Orbit</span>
-              <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
-                BETA
-              </span>
             </div>
 
             {/* Org Switcher */}
@@ -244,18 +240,6 @@ export default function Home() {
                   <UserPlus size={13} /> Invite
                 </button>
               )}
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
-                apiOnline
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : healthError
-                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-              }`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${
-                  apiOnline ? 'bg-emerald-400 animate-pulse' : healthError ? 'bg-red-400' : 'bg-amber-400 animate-pulse'
-                }`} />
-                {apiOnline ? 'API Online' : healthError ? 'API Offline' : 'Connecting…'}
-              </div>
             </div>
           </header>
 
@@ -293,21 +277,6 @@ export default function Home() {
                         ? 'Choose or create a workspace to organize your projects.'
                         : 'Pick a project from the sidebar or create a new one.'}
                     </p>
-
-                    {/* Stack cards */}
-                    <div className="grid grid-cols-3 gap-2 text-left">
-                      {[
-                        { icon: Server, label: 'NestJS API', desc: 'REST + Swagger', color: 'text-indigo-400' },
-                        { icon: Database, label: 'MongoDB', desc: 'Mongoose ODM', color: 'text-emerald-400' },
-                        { icon: Activity, label: 'Real-time', desc: 'Phase 2 ready', color: 'text-violet-400' },
-                      ].map(({ icon: Icon, label, desc, color }) => (
-                        <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                          <Icon className={`h-4 w-4 ${color} mb-1.5`} />
-                          <p className="text-xs font-semibold text-slate-300">{label}</p>
-                          <p className="text-[10px] text-slate-600">{desc}</p>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </motion.div>
               ) : (

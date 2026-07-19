@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
@@ -17,11 +17,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: '#6366f1',
+};
+
 export const metadata: Metadata = {
   title: "Orbit | Real-Time Collaboration Platform",
   description: "Orbit keeps your team in sync with real-time tasks, kanban boards, live chat, and AI assistance.",
   manifest: '/manifest.json',
-  themeColor: '#6366f1',
   icons: {
     icon: [
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -63,7 +66,16 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      for (let registration of registrations) {
+                        registration.unregister();
+                        console.log('[PWA] Unregistered service worker for local development');
+                      }
+                    });
+                  } else {
+                    navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  }
                 });
               }
             `,

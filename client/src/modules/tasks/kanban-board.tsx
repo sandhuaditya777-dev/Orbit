@@ -202,11 +202,6 @@ const KanbanCard = React.memo(({
       {/* Footer */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 gap-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          {task.storyPoints !== null && task.storyPoints !== undefined && (
-            <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[9px] font-bold text-slate-400 border border-slate-700/40" title="Story Points">
-              {task.storyPoints} pt
-            </span>
-          )}
           <div className="flex items-center -space-x-1.5 overflow-hidden">
             {task.assigneeIds?.slice(0, 3).map((aid) => {
               const u    = memberMap[aid];

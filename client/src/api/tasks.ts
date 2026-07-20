@@ -13,9 +13,7 @@ interface CreateTaskData {
   status?: string;
   parentTaskId?: string;
   assigneeIds?: string[];
-  assigneeId?: string; // legacy support
-  storyPoints?: number;
-  startDate?: string;
+  assigneeId?: string;
   dueDate?: string;
   labels?: string[];
 }
@@ -28,9 +26,7 @@ interface UpdateTaskData {
   status?: string;
   parentTaskId?: string | null;
   assigneeIds?: string[];
-  assigneeId?: string | null; // legacy support
-  storyPoints?: number | null;
-  startDate?: string | null;
+  assigneeId?: string | null;
   dueDate?: string | null;
   labels?: string[];
   isArchived?: boolean;

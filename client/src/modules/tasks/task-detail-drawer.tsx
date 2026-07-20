@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Calendar, Tag, ChevronDown, Loader2,
   Bug, CheckSquare, Layers, BookOpen, User2,
-  Clock, Flag, Hash, ExternalLink, MessageSquare, Activity,
+  Flag, ExternalLink, MessageSquare, Activity,
 } from 'lucide-react';
 import { useUpdateTask } from '@/api/tasks';
 import { useOrgMembers } from '@/api/organizations';
@@ -384,7 +384,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   </div>
                 </div>
 
-                {/* Dates */}
+                {/* Due Date only */}
                 <div className="flex flex-col gap-3">
                   <div>
                     <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -397,62 +397,32 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                       className="bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                     />
                   </div>
-                  <div>
-                    <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      <Clock className="h-3 w-3" /> Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={task.startDate ? task.startDate.slice(0, 10) : ''}
-                      onChange={(e) => update({ startDate: e.target.value || null })}
-                      className="bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                    />
-                  </div>
                 </div>
               </div>
 
-              {/* Story Points & Labels row */}
-              <div className="flex items-center gap-4">
-                <div>
-                  <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-                    <Hash className="h-3 w-3" /> Story Points
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={999}
-                    value={task.storyPoints ?? ''}
-                    onChange={(e) =>
-                      update({ storyPoints: e.target.value ? Number(e.target.value) : null })
-                    }
-                    placeholder="—"
-                    className="w-20 bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-                    <Tag className="h-3 w-3" /> Labels
-                  </label>
-                  <div className="flex flex-wrap gap-1">
-                    {task.labels?.map((lbl) => (
-                      <span
-                        key={lbl}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[10px] border border-slate-700/60"
+              {/* Labels */}
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <Tag className="h-3 w-3" /> Labels
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {task.labels?.map((lbl) => (
+                    <span
+                      key={lbl}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[10px] border border-slate-700/60"
+                    >
+                      {lbl}
+                      <button
+                        onClick={() => update({ labels: task.labels.filter((l) => l !== lbl) })}
+                        className="hover:text-red-400 transition-colors cursor-pointer"
                       >
-                        {lbl}
-                        <button
-                          onClick={() => update({ labels: task.labels.filter((l) => l !== lbl) })}
-                          className="hover:text-red-400 transition-colors cursor-pointer"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </span>
-                    ))}
-                    <LabelAdder
-                      onAdd={(lbl) => update({ labels: [...(task.labels ?? []), lbl] })}
-                    />
-                  </div>
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                  <LabelAdder
+                    onAdd={(lbl) => update({ labels: [...(task.labels ?? []), lbl] })}
+                  />
                 </div>
               </div>
 

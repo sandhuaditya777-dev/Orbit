@@ -12,9 +12,22 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // Enable CORS
+  const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim());
+
   app.enableCors({
-    origin: true, // Allow all origins in development
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Enable global validation pipe

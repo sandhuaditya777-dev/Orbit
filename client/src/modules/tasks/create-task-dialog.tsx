@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { CheckSquare, Calendar, Users, Target, BookOpen, AlertCircle } from "lucide-react";
+import { CheckSquare, Calendar, Users, AlertCircle, Flag } from "lucide-react";
 import { useCreateTask } from "@/api/tasks";
 import { useOrgMembers } from "@/api/organizations";
 import { useUIStore } from "@/store/ui.store";
@@ -31,8 +31,6 @@ interface FormValues {
   type: 'TASK' | 'BUG' | 'EPIC' | 'STORY';
   priority: 'NO_PRIORITY' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status: string;
-  storyPoints: number | "";
-  startDate: string;
   dueDate: string;
   assigneeIds: string[];
 }
@@ -75,8 +73,6 @@ export default function CreateTaskDialog({
       type: "TASK",
       priority: "MEDIUM",
       status: statuses[0] || "To Do",
-      storyPoints: "",
-      startDate: "",
       dueDate: "",
       assigneeIds: [],
     },
@@ -91,8 +87,6 @@ export default function CreateTaskDialog({
         type: data.type,
         priority: data.priority,
         status: data.status,
-        storyPoints: data.storyPoints === "" ? undefined : Number(data.storyPoints),
-        startDate: data.startDate || undefined,
         dueDate: data.dueDate || undefined,
         assigneeIds: data.assigneeIds,
         projectId,
@@ -106,8 +100,6 @@ export default function CreateTaskDialog({
             type: "TASK",
             priority: "MEDIUM",
             status: statuses[0] || "To Do",
-            storyPoints: "",
-            startDate: "",
             dueDate: "",
             assigneeIds: [],
           });
@@ -204,45 +196,21 @@ export default function CreateTaskDialog({
             </div>
           </div>
 
-          {/* Priority */}
+          {/* Priority dropdown */}
           <div className="flex flex-col gap-1.5 text-left">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Priority
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Flag className="h-3.5 w-3.5" /> Priority
             </span>
-            <Controller
-              name="priority"
-              control={control}
-              render={({ field }) => (
-                <div className="flex flex-wrap gap-1.5 mt-0.5">
-                  {PRIORITIES.map((p) => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => field.onChange(p.value)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                        field.value === p.value
-                          ? p.style
-                          : "bg-slate-900 text-slate-500 border-slate-800 hover:border-slate-700 hover:text-slate-400"
-                      }`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${p.dot}`} />
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* Story Points */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Story Points <span className="text-slate-600">(optional)</span></label>
-            <Input
-              type="number"
-              placeholder="e.g. 5"
-              className="bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500"
-              {...register("storyPoints")}
-            />
+            <select
+              {...register("priority")}
+              className="w-full bg-slate-800/50 border border-slate-700 text-sm text-slate-200 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+            >
+              {PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value} className="bg-slate-900">
+                  {p.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Assignees Selection */}
@@ -295,29 +263,16 @@ export default function CreateTaskDialog({
             />
           </div>
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-slate-500" /> Start Date
-              </span>
-              <Input
-                type="date"
-                className="bg-slate-800/50 border-slate-700 text-slate-100"
-                {...register("startDate")}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5 text-left">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-slate-500" /> Due Date
-              </span>
-              <Input
-                type="date"
-                className="bg-slate-800/50 border-slate-700 text-slate-100"
-                {...register("dueDate")}
-              />
-            </div>
+          {/* Due Date only */}
+          <div className="flex flex-col gap-1.5 text-left">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-slate-500" /> Due Date
+            </span>
+            <Input
+              type="date"
+              className="bg-slate-800/50 border-slate-700 text-slate-100"
+              {...register("dueDate")}
+            />
           </div>
 
           {apiError && (

@@ -26,7 +26,8 @@ function Auth0Sync({ children }: { children: React.ReactNode }) {
         try {
           // Retrieve Auth0 access token
           const token = await getAccessTokenSilently();
-          localStorage.setItem('cosync_token', token);
+          // Store with the key the api-client reads
+          localStorage.setItem('orbit_token', token);
 
           const mappedUser: User = {
             sub: auth0User.sub || '',
@@ -35,14 +36,14 @@ function Auth0Sync({ children }: { children: React.ReactNode }) {
             roles: (auth0User['https://cosync.com/roles'] as string[]) || ['member'],
           };
 
-          login(token, mappedUser);
+          login(mappedUser);
         } catch (error) {
           console.error('Error fetching Auth0 access token:', error);
-          localStorage.removeItem('cosync_token');
+          localStorage.removeItem('orbit_token');
           logout();
         }
       } else if (!isLoading && !isAuthenticated) {
-        localStorage.removeItem('cosync_token');
+        localStorage.removeItem('orbit_token');
         logout();
       }
     };

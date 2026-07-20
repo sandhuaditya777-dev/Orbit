@@ -30,8 +30,8 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and cross-origin
   if (request.method !== 'GET' || !url.origin.startsWith(self.location.origin)) return;
 
-  // API calls: network-only (never cache auth tokens)
-  if (url.pathname.startsWith('/api')) return;
+  // API calls & Next.js chunk files: network-only
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next')) return;
 
   // Static assets: cache-first with network fallback
   event.respondWith(

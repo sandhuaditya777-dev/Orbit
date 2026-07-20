@@ -101,9 +101,7 @@ export interface Task {
   status: string;
   parentTaskId: string | null;
   assigneeIds: string[];
-  assigneeId: string | null; // legacy compat
-  storyPoints: number | null;
-  startDate: string | null;
+  assigneeId: string | null;
   dueDate: string | null;
   completedAt: string | null;
   labels: string[];

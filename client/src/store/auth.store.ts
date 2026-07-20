@@ -1,18 +1,20 @@
 import { create } from 'zustand';
 
+const TOKEN_KEY = 'orbit_token';
+
 export interface User {
   sub: string;
   name: string;
   email: string;
+  avatar?: string;
   roles: string[];
 }
 
 interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
-  token: string | null;
   isLoading: boolean;
-  login: (token: string, user: User) => void;
+  login: (user: User) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -20,9 +22,13 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   user: null,
-  token: null,
   isLoading: false,
-  login: (token, user) => set({ isAuthenticated: true, token, user, isLoading: false }),
-  logout: () => set({ isAuthenticated: false, token: null, user: null, isLoading: false }),
+  login: (user) => {
+    set({ isAuthenticated: true, user, isLoading: false });
+  },
+  logout: () => {
+    if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
+    set({ isAuthenticated: false, user: null, isLoading: false });
+  },
   setLoading: (isLoading) => set({ isLoading }),
 }));

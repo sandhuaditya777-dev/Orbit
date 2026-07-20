@@ -91,4 +91,29 @@ export class MailService {
       `,
     }).catch(() => {/* fire and forget */});
   }
+
+  /** Org invite email */
+  sendInvite(opts: {
+    to: string;
+    orgName: string;
+    inviterName: string;
+    inviteUrl: string;
+  }): void {
+    this.sendMail({
+      to: opts.to,
+      subject: `[Orbit] ${opts.inviterName} invited you to join ${opts.orgName}`,
+      html: `
+        <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;background:#0f172a;color:#e2e8f0;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:28px 32px">
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#fff">&#x1F680; You're Invited!</h1>
+          </div>
+          <div style="padding:28px 32px">
+            <p style="margin:0 0 16px;font-size:16px"><strong>${opts.inviterName}</strong> invited you to join <strong>${opts.orgName}</strong> on Orbit.</p>
+            <a href="${opts.inviteUrl}" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:700;font-size:15px">Accept Invitation</a>
+            <p style="margin:24px 0 0;color:#64748b;font-size:12px">This invite link expires in 7 days. If you didn't expect this, you can safely ignore it.</p>
+          </div>
+        </div>
+      `,
+    }).catch(() => {/* fire and forget */});
+  }
 }

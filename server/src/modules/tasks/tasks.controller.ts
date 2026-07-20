@@ -43,7 +43,7 @@ export class TasksController {
     // Default: CSV
     const headers = [
       'slug', 'title', 'type', 'status', 'priority',
-      'storyPoints', 'assigneeIds', 'labels', 'dueDate', 'createdAt',
+      'assigneeIds', 'labels', 'dueDate', 'createdAt',
     ];
     const rows = tasks.map((t) => [
       t.slug,
@@ -51,7 +51,6 @@ export class TasksController {
       t.type,
       `"${t.status}"`,
       t.priority,
-      t.storyPoints ?? '',
       (t.assigneeIds ?? []).join('|'),
       (t.labels ?? []).join('|'),
       (t as any).dueDate ? new Date((t as any).dueDate).toISOString().slice(0, 10) : '',

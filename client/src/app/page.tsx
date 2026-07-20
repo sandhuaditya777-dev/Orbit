@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Orbit, LogOut, Activity, Server, Database, ChevronRight,
-  Columns2, BarChart2,
+  Orbit, LogOut, ChevronRight, Columns2, BarChart2, CalendarDays, UserPlus,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
@@ -19,9 +18,11 @@ import ProjectList from '@/modules/project/project-list';
 import CreateProjectDialog from '@/modules/project/create-project-dialog';
 import KanbanBoard from '@/modules/tasks/kanban-board';
 import NotificationsBell from '@/modules/notifications/notifications-bell';
-import LandingPage from '@/modules/auth/LandingPage';
 import CommandPalette from '@/modules/search/command-palette';
 import AnalyticsPanel from '@/modules/project/analytics-panel';
+import CalendarView from '@/modules/project/calendar-view';
+import ThemeToggle from '@/modules/ui/theme-toggle';
+import InviteMemberDialog from '@/modules/org/invite-member-dialog';
 import { Button } from '@/components/ui/button';
 import {
   SidebarProvider,
@@ -46,7 +47,8 @@ export default function Home() {
 
   const [wsDialogOpen, setWsDialogOpen] = useState(false);
   const [projDialogOpen, setProjDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'kanban' | 'analytics'>('kanban');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'kanban' | 'analytics' | 'calendar'>('kanban');
 
   // Health check
   const { data: healthData, error: healthError } = useQuery({
@@ -68,16 +70,17 @@ export default function Home() {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  // Redirect to Auth0 login automatically if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
+
   if (error) return <ErrorScreen error={error} handleLogout={handleLogout} />;
-  if (isLoading) return <LoadingScreen />;
-
-  // ── Show premium landing page for unauthenticated users ──
-  if (!isAuthenticated) {
-    return <LandingPage onLogin={() => loginWithRedirect()} />;
-  }
+  if (isLoading || !isAuthenticated) return <LoadingScreen />;
 
 
-  const apiOnline = !!healthData && !healthError;
 
   return (
     <SidebarProvider>
@@ -93,9 +96,6 @@ export default function Home() {
                 <Orbit className="h-4 w-4 text-white" />
               </div>
               <span className="font-extrabold text-white tracking-tight">Orbit</span>
-              <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
-                BETA
-              </span>
             </div>
 
             {/* Org Switcher */}
@@ -212,24 +212,34 @@ export default function Home() {
                 >
                   <BarChart2 size={12} /> Analytics
                 </button>
+                <button
+                  id="view-calendar-btn"
+                  onClick={() => setViewMode('calendar')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    viewMode === 'calendar'
+                      ? 'bg-slate-800 text-slate-100 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  <CalendarDays size={12} /> Calendar
+                </button>
               </div>
             )}
 
-            {/* API Status + Notifications */}
+            {/* API Status + Notifications + Theme */}
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell />
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
-                apiOnline
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : healthError
-                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-              }`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${
-                  apiOnline ? 'bg-emerald-400 animate-pulse' : healthError ? 'bg-red-400' : 'bg-amber-400 animate-pulse'
-                }`} />
-                {apiOnline ? 'API Online' : healthError ? 'API Offline' : 'Connecting…'}
-              </div>
+              <ThemeToggle />
+              {activeOrgId && (
+                <button
+                  id="invite-member-btn"
+                  onClick={() => setInviteOpen(true)}
+                  title="Invite team member"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 text-xs font-medium transition-all cursor-pointer"
+                >
+                  <UserPlus size={13} /> Invite
+                </button>
+              )}
             </div>
           </header>
 
@@ -267,21 +277,6 @@ export default function Home() {
                         ? 'Choose or create a workspace to organize your projects.'
                         : 'Pick a project from the sidebar or create a new one.'}
                     </p>
-
-                    {/* Stack cards */}
-                    <div className="grid grid-cols-3 gap-2 text-left">
-                      {[
-                        { icon: Server, label: 'NestJS API', desc: 'REST + Swagger', color: 'text-indigo-400' },
-                        { icon: Database, label: 'MongoDB', desc: 'Mongoose ODM', color: 'text-emerald-400' },
-                        { icon: Activity, label: 'Real-time', desc: 'Phase 2 ready', color: 'text-violet-400' },
-                      ].map(({ icon: Icon, label, desc, color }) => (
-                        <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
-                          <Icon className={`h-4 w-4 ${color} mb-1.5`} />
-                          <p className="text-xs font-semibold text-slate-300">{label}</p>
-                          <p className="text-[10px] text-slate-600">{desc}</p>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </motion.div>
               ) : (
@@ -300,11 +295,13 @@ export default function Home() {
                       projectName={activeProject?.name ?? 'Project'}
                       statuses={activeProject?.statuses ?? ['To Do', 'In Progress', 'In Review', 'Completed']}
                     />
-                  ) : (
+                  ) : viewMode === 'analytics' ? (
                     <AnalyticsPanel
                       projectId={activeProjectId}
                       memberMap={{}}
                     />
+                  ) : (
+                    <CalendarView projectId={activeProjectId} />
                   )}
                 </motion.div>
               )}
@@ -330,6 +327,15 @@ export default function Home() {
           workspaceId={activeWorkspaceId}
           organizationId={activeOrgId!}
           onCreated={(id) => setActiveProjectId(id)}
+        />
+      )}
+
+      {activeOrgId && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          orgId={activeOrgId}
+          orgName={"your organization"}
         />
       )}
     </SidebarProvider>

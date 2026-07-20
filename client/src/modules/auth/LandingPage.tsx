@@ -228,7 +228,6 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
             <Orbit className="h-4 w-4 text-white" />
           </div>
           <span className="font-extrabold text-white text-lg tracking-tight">Orbit</span>
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">BETA</span>
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-slate-400">

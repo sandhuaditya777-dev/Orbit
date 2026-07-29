@@ -21,7 +21,6 @@ import NotificationsBell from '@/modules/notifications/notifications-bell';
 import CommandPalette from '@/modules/search/command-palette';
 import AnalyticsPanel from '@/modules/project/analytics-panel';
 import CalendarView from '@/modules/project/calendar-view';
-import ThemeToggle from '@/modules/ui/theme-toggle';
 import InviteMemberDialog from '@/modules/org/invite-member-dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -226,10 +225,9 @@ export default function Home() {
               </div>
             )}
 
-            {/* API Status + Notifications + Theme */}
+            {/* API Status + Notifications */}
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell />
-              <ThemeToggle />
               {activeOrgId && (
                 <button
                   id="invite-member-btn"

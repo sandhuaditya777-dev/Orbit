@@ -79,7 +79,7 @@ ProjectItem.displayName = 'ProjectItem';
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function ProjectList({ workspaceId, activeProjectId, onSelect, onCreateClick }: Props) {
-  const { data: projects = [], isLoading } = useProjects(workspaceId);
+  const { data: projects = [], isLoading, error } = useProjects(workspaceId);
 
   return (
     <div className="flex flex-col gap-1">
@@ -108,15 +108,28 @@ export default function ProjectList({ workspaceId, activeProjectId, onSelect, on
         </div>
       )}
 
+      {/* Error state */}
+      {error && (
+        <div className="flex flex-col gap-2 px-3 py-2">
+          <div className="flex items-center gap-2 text-red-400 text-xs">
+            <ChevronRight className="h-3.5 w-3.5" />
+            Failed to load projects
+          </div>
+          <p className="text-[10px] text-slate-600 pl-5">
+            {error instanceof Error ? error.message : 'An error occurred'}
+          </p>
+        </div>
+      )}
+
       {/* No workspace selected */}
-      {!isLoading && !workspaceId && (
+      {!isLoading && !error && !workspaceId && (
         <p className="text-xs text-slate-600 px-3 py-2 select-none italic">
           Select a workspace first
         </p>
       )}
 
       {/* Empty */}
-      {!isLoading && workspaceId && projects.length === 0 && (
+      {!isLoading && !error && workspaceId && projects.length === 0 && (
         <button
           onClick={onCreateClick}
           className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-400 transition-colors text-xs cursor-pointer"
@@ -127,7 +140,7 @@ export default function ProjectList({ workspaceId, activeProjectId, onSelect, on
       )}
 
       {/* Project list */}
-      {!isLoading &&
+      {!isLoading && !error &&
         projects.map((project: Project) => (
           <ProjectItem
             key={project._id}

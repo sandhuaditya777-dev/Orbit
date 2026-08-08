@@ -99,6 +99,7 @@ export interface Task {
   type: TaskType;
   priority: TaskPriority;
   status: string;
+  order: number;
   parentTaskId: string | null;
   assigneeIds: string[];
   assigneeId: string | null;

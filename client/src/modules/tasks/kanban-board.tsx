@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Loader2, Trash2, ChevronRight, AlertCircle, FolderKanban,
@@ -12,10 +13,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   closestCorners,
   type DragStartEvent,
   type DragEndEvent,
-  type DragOverEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -108,20 +109,21 @@ interface KanbanCardProps {
   isDragOverlay?: boolean;
 }
 
-const KanbanCard = React.memo(({
+interface KanbanCardBodyProps extends KanbanCardProps {
+  cardRef?: (node: HTMLElement | null) => void;
+  style?: React.CSSProperties;
+  isDragging?: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+}
+
+// Pure presentational body — no dnd-kit hooks, so it's safe to render a
+// second copy of it inside DragOverlay without fighting over sortable
+// node registration for the same task id.
+function KanbanCardBody({
   task, colIdx, statuses, onMoveNext, onDelete, onClick,
   isUpdating, memberMap, allTasks, isDragOverlay = false,
-}: KanbanCardProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task._id });
-
-  const style = {
-    transform:  CSS.Transform.toString(transform),
-    transition,
-    opacity:    isDragging ? 0.35 : 1,
-    touchAction: 'none' as const,
-  };
-
+  cardRef, style, isDragging = false, dragHandleProps,
+}: KanbanCardBodyProps) {
   const priorityStyle = PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.MEDIUM;
   const showMoveNext  = colIdx < statuses.length - 1;
 
@@ -134,9 +136,10 @@ const KanbanCard = React.memo(({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={cardRef}
       style={style}
-      className={`group bg-slate-900 border rounded-xl p-3.5 flex flex-col gap-2.5 cursor-pointer transition-all ${
+      {...dragHandleProps}
+      className={`group bg-slate-900 border rounded-xl p-3.5 flex flex-col gap-2.5 cursor-grab active:cursor-grabbing transition-all touch-none ${
         isDragOverlay
           ? 'border-indigo-500/50 shadow-2xl shadow-indigo-500/20 rotate-1 scale-105'
           : isDragging
@@ -148,13 +151,8 @@ const KanbanCard = React.memo(({
       {/* Slug, Type + Priority + Drag handle */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          {/* Drag handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 touch-none"
-            onClick={(e) => e.stopPropagation()}
-          >
+          {/* Drag handle (decorative — the whole card is draggable) */}
+          <div className="opacity-60 group-hover:opacity-100 transition-opacity p-0.5 rounded text-slate-500">
             <GripVertical className="h-3.5 w-3.5" />
           </div>
           {TYPE_ICONS[task.type] || <CheckSquare className="h-3.5 w-3.5 text-slate-400" />}
@@ -244,6 +242,30 @@ const KanbanCard = React.memo(({
       </div>
     </div>
   );
+}
+
+// Sortable wrapper — owns the useSortable hook, used for the real cards in
+// each column. The DragOverlay ghost renders KanbanCardBody directly instead.
+const KanbanCard = React.memo((props: KanbanCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: props.task._id });
+
+  const style: React.CSSProperties = {
+    transform:  CSS.Transform.toString(transform),
+    transition,
+    opacity:    isDragging ? 0.35 : 1,
+    touchAction: 'none',
+  };
+
+  return (
+    <KanbanCardBody
+      {...props}
+      cardRef={setNodeRef}
+      style={style}
+      isDragging={isDragging}
+      dragHandleProps={{ ...attributes, ...listeners }}
+    />
+  );
 });
 KanbanCard.displayName = 'KanbanCard';
 
@@ -267,8 +289,18 @@ function DroppableColumn({
   const dotColor = STATUS_COLORS[colIdx] || 'bg-slate-400';
   const taskIds  = tasks.map((t) => t._id);
 
+  // Registers the column itself as a drop target — without this, dropping on
+  // empty space (or an empty column) never resolves to this status, since
+  // only individual cards are sortable/droppable.
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+
   return (
-    <div className="flex flex-col gap-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-4 min-h-[320px]">
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col gap-3 border rounded-2xl p-4 min-h-[320px] transition-colors ${
+        isOver ? 'bg-indigo-500/5 border-indigo-500/40' : 'bg-slate-900/40 border-slate-800/60'
+      }`}
+    >
       {/* Column header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -381,6 +413,7 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
     const map: Record<string, Task[]> = {};
     boardStatuses.forEach((s) => { map[s] = []; });
     filteredTasks.forEach((t) => { if (map[t.status]) map[t.status].push(t); });
+    Object.values(map).forEach((list) => list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
     return map;
   }, [filteredTasks, boardStatuses]);
 
@@ -404,6 +437,8 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
+  const queryClient = useQueryClient();
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const dragged = tasks.find((t) => t._id === event.active.id);
     if (dragged) setActiveTask(dragged);
@@ -412,41 +447,41 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
-    if (!over || active.id === over.id) return;
-
-    const draggedTask = tasks.find((t) => t._id === active.id);
-    if (!draggedTask) return;
-
-    // Check if dropped onto a column header or a card in another column
-    const overId = String(over.id);
-
-    // Is it a column name?
-    if (boardStatuses.includes(overId)) {
-      if (draggedTask.status !== overId) {
-        updateTask.mutate({ id: draggedTask._id, data: { status: overId } });
-      }
-      return;
-    }
-
-    // It's over another card — find that card's status
-    const overTask = tasks.find((t) => t._id === overId);
-    if (overTask && overTask.status !== draggedTask.status) {
-      updateTask.mutate({ id: draggedTask._id, data: { status: overTask.status } });
-    }
-  }, [tasks, boardStatuses, updateTask]);
-
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { active, over } = event;
     if (!over) return;
+
     const draggedTask = tasks.find((t) => t._id === active.id);
     if (!draggedTask) return;
 
+    // Dropped onto a column header, or onto another card (whose column we adopt)
     const overId = String(over.id);
-    if (boardStatuses.includes(overId) && draggedTask.status !== overId) {
-      // Optimistic: update local view immediately while dragging
-      updateTask.mutate({ id: draggedTask._id, data: { status: overId } });
-    }
-  }, [tasks, boardStatuses, updateTask]);
+    const isOverColumn = boardStatuses.includes(overId);
+    const overTask = isOverColumn ? null : tasks.find((t) => t._id === overId);
+    const targetStatus = isOverColumn ? overId : (overTask?.status ?? draggedTask.status);
+
+    // Where in the target column's order the card should land, excluding itself
+    const siblings = (tasksByStatus[targetStatus] ?? []).filter((t) => t._id !== draggedTask._id);
+    const insertIndex = overTask
+      ? Math.max(siblings.findIndex((t) => t._id === overTask._id), 0)
+      : siblings.length;
+
+    // Fractional indexing: slot the new order value between its neighbors
+    const prevOrder = siblings[insertIndex - 1]?.order;
+    const nextOrder = siblings[insertIndex]?.order;
+    const newOrder =
+      prevOrder == null && nextOrder == null ? 1000 :
+      prevOrder == null ? nextOrder! - 1000 :
+      nextOrder == null ? prevOrder + 1000 :
+      (prevOrder + nextOrder) / 2;
+
+    if (targetStatus === draggedTask.status && newOrder === draggedTask.order) return;
+
+    // Optimistic cache update so the card lands in place instantly
+    queryClient.setQueryData<Task[]>(['tasks', projectId], (old) =>
+      old?.map((t) => (t._id === draggedTask._id ? { ...t, status: targetStatus, order: newOrder } : t))
+    );
+
+    updateTask.mutate({ id: draggedTask._id, data: { status: targetStatus, order: newOrder } });
+  }, [tasks, boardStatuses, tasksByStatus, updateTask, queryClient, projectId]);
 
   const isLoading = tasksLoading || wfsLoading;
   if (isLoading) {
@@ -551,7 +586,7 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
         {/* Drag overlay — floating ghost card */}
         <DragOverlay>
           {activeTask && (
-            <KanbanCard
+            <KanbanCardBody
               task={activeTask}
               colIdx={boardStatuses.indexOf(activeTask.status)}
               statuses={boardStatuses}

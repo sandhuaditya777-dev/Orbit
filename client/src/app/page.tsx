@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useUIStore } from '@/store/ui.store';
 import { useProject } from '@/api/projects';
 import { useAuth0 } from '@auth0/auth0-react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 import OrgSwitcher from '@/modules/org/org-switcher';
 import WorkspaceSwitcher from '@/modules/workspace/workspace-switcher';
@@ -36,7 +37,7 @@ import LoadingScreen from '@/modules/auth/LoadingScreen';
 import ErrorScreen from '@/modules/auth/ErrorScreen';
 
 export default function Home() {
-  const { isAuthenticated, isLoading, error, loginWithRedirect, logout: auth0Logout } = useAuth0();
+  const { isAuthenticated, isLoading, error, loginWithRedirect, logout: auth0Logout, getAccessTokenSilently } = useAuth0();
   const { user, logout } = useAuthStore();
   const {
     activeOrgId, setActiveOrgId,
@@ -61,7 +62,7 @@ export default function Home() {
     refetchInterval: 20000,
   });
 
-  const { data: activeProject } = useProject(activeProjectId);
+  const { data: activeProject, isLoading: isProjectLoading, error: projectError } = useProject(activeProjectId);
 
   const handleLogout = () => {
     localStorage.removeItem('orbit_token');
@@ -69,12 +70,17 @@ export default function Home() {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
-  // Redirect to Auth0 login automatically if not authenticated
+  // Try silent auth first — only redirect to Auth0 login page if no session exists
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      loginWithRedirect();
+      // Attempt invisible silent authentication using existing Auth0 session
+      getAccessTokenSilently()
+        .catch(() => {
+          // No session at all — must redirect to Auth0 login page
+          loginWithRedirect();
+        });
     }
-  }, [isLoading, isAuthenticated, loginWithRedirect]);
+  }, [isLoading, isAuthenticated, loginWithRedirect, getAccessTokenSilently]);
 
   if (error) return <ErrorScreen error={error} handleLogout={handleLogout} />;
   if (isLoading || !isAuthenticated) return <LoadingScreen />;
@@ -243,7 +249,8 @@ export default function Home() {
 
           {/* Content Area */}
           <main className="flex-1 overflow-y-auto p-6">
-            <AnimatePresence mode="wait">
+            <ErrorBoundary>
+              <AnimatePresence mode="wait">
               {!activeProjectId ? (
                 <motion.div
                   key="empty"
@@ -286,24 +293,67 @@ export default function Home() {
                   transition={{ duration: 0.2 }}
                   className="flex flex-col h-full"
                 >
-                  {viewMode === 'kanban' ? (
-                    <KanbanBoard
-                      projectId={activeProjectId}
-                      workspaceId={activeWorkspaceId!}
-                      projectName={activeProject?.name ?? 'Project'}
-                      statuses={activeProject?.statuses ?? ['To Do', 'In Progress', 'In Review', 'Completed']}
-                    />
-                  ) : viewMode === 'analytics' ? (
-                    <AnalyticsPanel
-                      projectId={activeProjectId}
-                      memberMap={{}}
-                    />
+                  {/* Loading state for project data */}
+                  {isProjectLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="mb-4 h-12 w-12 mx-auto rounded-full bg-slate-800 flex items-center justify-center">
+                          <div className="h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                        <p className="text-sm text-slate-400">Loading project...</p>
+                      </div>
+                    </div>
+                  ) : projectError ? (
+                    /* Error state for project data */
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center max-w-md">
+                        <div className="mb-4 h-12 w-12 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">
+                          <ChevronRight className="h-6 w-6 text-red-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Failed to load project</h3>
+                        <p className="text-sm text-slate-400 mb-4">
+                          {projectError instanceof Error ? projectError.message : 'An error occurred while loading the project'}
+                        </p>
+                        <Button
+                          onClick={() => setActiveProjectId(null)}
+                          variant="outline"
+                          className="border-slate-700 hover:bg-slate-800"
+                        >
+                          Back to projects
+                        </Button>
+                      </div>
+                    </div>
+                  ) : activeProject ? (
+                    /* Render project views */
+                    <>
+                      {viewMode === 'kanban' ? (
+                        <KanbanBoard
+                          projectId={activeProjectId}
+                          workspaceId={activeWorkspaceId!}
+                          projectName={activeProject.name}
+                          statuses={activeProject.statuses ?? ['To Do', 'In Progress', 'In Review', 'Completed']}
+                        />
+                      ) : viewMode === 'analytics' ? (
+                        <AnalyticsPanel
+                          projectId={activeProjectId}
+                          memberMap={{}}
+                        />
+                      ) : (
+                        <CalendarView projectId={activeProjectId} />
+                      )}
+                    </>
                   ) : (
-                    <CalendarView projectId={activeProjectId} />
+                    /* Fallback if project data is missing */
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="text-sm text-slate-400">Project not found</p>
+                      </div>
+                    </div>
                   )}
                 </motion.div>
               )}
             </AnimatePresence>
+            </ErrorBoundary>
           </main>
         </div>
       </div>

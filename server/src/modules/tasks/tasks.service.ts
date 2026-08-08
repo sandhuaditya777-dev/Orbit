@@ -36,13 +36,21 @@ export class TasksService {
     if (!project) throw new NotFoundException('Project not found');
 
     const { number, identifier } = await this.projectsService.generateTaskNumber(dto.projectId);
+    const status = dto.status || project.statuses[0] || 'To Do';
+
+    const lastInColumn = await this.taskModel
+      .findOne({ projectId: dto.projectId, status })
+      .sort({ order: -1 })
+      .select('order')
+      .lean();
 
     const taskData = {
       ...dto,
       taskNumber: number,
       slug: identifier,
       createdBy: userId,
-      status: dto.status || project.statuses[0] || 'To Do',
+      status,
+      order: (lastInColumn?.order ?? 0) + 1000,
       assigneeId: dto.assigneeIds?.[0] || dto.assigneeId || null,
       assigneeIds: dto.assigneeIds || (dto.assigneeId ? [dto.assigneeId] : []),
     };
@@ -124,7 +132,7 @@ export class TasksService {
 
     return this.taskModel
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({ order: 1, createdAt: -1 })
       .exec();
   }
 

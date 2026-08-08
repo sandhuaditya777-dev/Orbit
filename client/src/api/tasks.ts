@@ -24,6 +24,7 @@ interface UpdateTaskData {
   type?: 'TASK' | 'BUG' | 'EPIC' | 'STORY';
   priority?: 'NO_PRIORITY' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   status?: string;
+  order?: number;
   parentTaskId?: string | null;
   assigneeIds?: string[];
   assigneeId?: string | null;
@@ -61,9 +62,13 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskData }) =>
       api.patch<Task>(`/tasks/${id}`, data),
-    onSuccess: (res) => {
+    onSuccess: (res, { data }) => {
       qc.invalidateQueries({ queryKey: ['tasks', res.projectId] });
-      toast.success(`Task status updated to "${res.status}".`);
+      if (data.status) {
+        toast.success(`Task status updated to "${res.status}".`);
+      } else if (!('order' in data) || Object.keys(data).length > 1) {
+        toast.success('Task updated.');
+      }
     },
     onError: (err) => {
       toast.error(`Failed to update task: ${err.message}`);

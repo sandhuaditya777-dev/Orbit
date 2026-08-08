@@ -43,6 +43,10 @@ export class Task {
   @Prop({ required: true, default: 'To Do' })
   status: string;
 
+  // Sort position within a status column (fractional indexing — see tasks.service.ts)
+  @Prop({ type: Number, default: 0 })
+  order: number;
+
   @Prop({ type: String, default: null })
   parentTaskId: string | null;
 

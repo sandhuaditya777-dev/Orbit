@@ -126,5 +126,10 @@ export class UpdateTaskDto {
   @IsBoolean()
   @IsOptional()
   isArchived?: boolean;
+
+  @ApiPropertyOptional({ description: 'Sort position within its status column' })
+  @IsNumber()
+  @IsOptional()
+  order?: number;
 }
 

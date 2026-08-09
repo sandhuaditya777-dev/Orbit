@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#6366f1',
+  themeColor: '#F59E0B',
 };
 
 export const metadata: Metadata = {
@@ -47,15 +47,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans">
+      <body className="min-h-full flex flex-col bg-white text-slate-900 font-sans">
         <QueryProvider>
           <AuthProvider>
             <SocketProvider>
               <TooltipProvider>
                 {children}
-                <Toaster richColors theme="dark" closeButton position="top-right" />
+                <Toaster richColors theme="light" closeButton position="top-right" />
               </TooltipProvider>
             </SocketProvider>
           </AuthProvider>

@@ -36,25 +36,25 @@ function NotifRow({ notif, onRead }: NotifRowProps) {
       initial={{ opacity: 0, x: 10 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
-      className={`group flex items-start gap-3 px-4 py-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer ${
+      className={`group flex items-start gap-3 px-4 py-3 border-b border-gray-100 hover:bg-amber-50/50 transition-colors cursor-pointer ${
         notif.isRead ? 'opacity-60' : ''
       }`}
       onClick={() => !notif.isRead && onRead(notif._id)}
     >
       {/* Icon bubble */}
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-sm mt-0.5">
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-sm mt-0.5">
         {TYPE_ICONS[notif.type] ?? '🔔'}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-slate-200 text-xs font-medium leading-snug">{notif.title}</p>
-        <p className="text-slate-400 text-[11px] leading-snug truncate mt-0.5">{notif.body}</p>
-        <p className="text-slate-600 text-[10px] mt-1">{timeAgo(notif.createdAt)}</p>
+        <p className="text-gray-800 text-xs font-medium leading-snug">{notif.title}</p>
+        <p className="text-gray-500 text-[11px] leading-snug truncate mt-0.5">{notif.body}</p>
+        <p className="text-gray-400 text-[10px] mt-1">{timeAgo(notif.createdAt)}</p>
       </div>
 
       {!notif.isRead && (
         <div className="flex-shrink-0 mt-1.5">
-          <div className="w-2 h-2 rounded-full bg-indigo-400" />
+          <div className="w-2 h-2 rounded-full bg-amber-500" />
         </div>
       )}
     </motion.div>
@@ -83,7 +83,7 @@ export default function NotificationsBell() {
       <button
         id="notifications-bell-btn"
         onClick={() => setOpen((v) => !v)}
-        className="relative p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors"
+        className="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         title="Notifications"
       >
         <Bell size={18} />
@@ -92,7 +92,7 @@ export default function NotificationsBell() {
             key={unreadCount}
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center"
+            className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </motion.span>
@@ -107,16 +107,16 @@ export default function NotificationsBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-80 max-h-[480px] flex flex-col bg-slate-950 border border-slate-800/70 rounded-xl shadow-2xl z-50 overflow-hidden"
+            className="absolute right-0 top-full mt-2 w-80 max-h-[480px] flex flex-col bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 flex-shrink-0">
-              <h3 className="text-slate-200 text-sm font-semibold">Notifications</h3>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+              <h3 className="text-gray-900 text-sm font-semibold">Notifications</h3>
               <div className="flex items-center gap-1">
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllRead}
-                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                     title="Mark all as read"
                   >
                     <CheckCheck size={12} />
@@ -125,7 +125,7 @@ export default function NotificationsBell() {
                 )}
                 <button
                   onClick={() => setOpen(false)}
-                  className="p-1 rounded-md text-slate-600 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   <X size={14} />
                 </button>
@@ -136,10 +136,10 @@ export default function NotificationsBell() {
             <div className="overflow-y-auto flex-1">
               {isLoading ? (
                 <div className="flex items-center justify-center py-10">
-                  <Loader2 size={20} className="text-indigo-400 animate-spin" />
-                </div>
+                  <Loader2 size={20} className="text-amber-500 animate-spin" />
+              </div>
               ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-500">
+                <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
                   <Bell size={28} className="opacity-30" />
                   <p className="text-sm">No notifications yet</p>
                 </div>
@@ -154,8 +154,8 @@ export default function NotificationsBell() {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="px-4 py-2 border-t border-slate-800/60 flex-shrink-0">
-                <p className="text-[10px] text-slate-600 text-center">
+              <div className="px-4 py-2 border-t border-gray-100 flex-shrink-0">
+                <p className="text-[10px] text-gray-400 text-center">
                   Showing last {notifications.length} notifications
                 </p>
               </div>

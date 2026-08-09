@@ -40,14 +40,14 @@ function StatCard({
   icon: React.ElementType; color: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800/60 bg-slate-900/50 p-5 flex items-start gap-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 flex items-start gap-4 shadow-sm">
       <div className={`p-2.5 rounded-lg ${color}`}>
         <Icon size={18} className="text-white" />
       </div>
       <div>
-        <p className="text-2xl font-black text-white">{value}</p>
-        <p className="text-slate-400 text-xs mt-0.5">{label}</p>
-        <p className="text-slate-600 text-[10px] mt-0.5">{sub}</p>
+        <p className="text-2xl font-black text-gray-900">{value}</p>
+        <p className="text-gray-500 text-xs mt-0.5">{label}</p>
+        <p className="text-gray-400 text-[10px] mt-0.5">{sub}</p>
       </div>
     </div>
   );
@@ -56,8 +56,8 @@ function StatCard({
 /* ─── Chart card wrapper ────────────────────────────────────────── */
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-800/60 bg-slate-900/50 p-5">
-      <p className="text-slate-300 text-sm font-semibold mb-4">{title}</p>
+    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-gray-800 text-sm font-semibold mb-4">{title}</p>
       {children}
     </div>
   );
@@ -136,10 +136,10 @@ export default function AnalyticsPanel({ projectId, memberMap }: Props) {
     >
       {/* ── Stat row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Tasks"      value={data.total}          sub="across all statuses"          icon={ListTodo}    color="bg-indigo-500/80" />
-        <StatCard label="Completed"        value={data.completedCount} sub="tasks with completedAt set"   icon={CheckCircle2} color="bg-emerald-500/80" />
-        <StatCard label="Completion Rate"  value={`${completionRate}%`} sub="of all tasks finished"       icon={TrendingUp}  color="bg-violet-500/80" />
-        <StatCard label="Statuses in use"  value={data.byStatus.length} sub="active workflow stages"     icon={BarChart2}   color="bg-cyan-500/80" />
+        <StatCard label="Total Tasks"      value={data.total}          sub="across all statuses"          icon={ListTodo}    color="bg-amber-500" />
+        <StatCard label="Completed"        value={data.completedCount} sub="tasks with completedAt set"   icon={CheckCircle2} color="bg-emerald-500" />
+        <StatCard label="Completion Rate"  value={`${completionRate}%`} sub="of all tasks finished"       icon={TrendingUp}  color="bg-amber-600" />
+        <StatCard label="Statuses in use"  value={data.byStatus.length} sub="active workflow stages"     icon={BarChart2}   color="bg-cyan-500" />
       </div>
 
       {/* ── Charts 2×2 ── */}
@@ -180,13 +180,13 @@ export default function AnalyticsPanel({ projectId, memberMap }: Props) {
           ) : (
             <ChartContainer config={priorityConfig} className="h-52">
               <BarChart data={data.byPriority} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="priority" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="priority" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {data.byPriority.map((p, i) => (
-                    <Cell key={i} fill={PRIORITY_COLORS[p.priority] ?? '#64748b'} />
+                    <Cell key={i} fill={PRIORITY_COLORS[p.priority] ?? '#9ca3af'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -200,22 +200,22 @@ export default function AnalyticsPanel({ projectId, memberMap }: Props) {
             <AreaChart data={timeline}>
               <defs>
                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#f59e0b" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b' }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke="#6366f1"
+                stroke="#f59e0b"
                 strokeWidth={2}
                 fill="url(#areaGrad)"
-                dot={{ fill: '#6366f1', r: 3, strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#818cf8' }}
+                dot={{ fill: '#f59e0b', r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#d97706' }}
               />
             </AreaChart>
           </ChartContainer>
@@ -234,9 +234,9 @@ export default function AnalyticsPanel({ projectId, memberMap }: Props) {
                 }))}
                 barSize={22}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} allowDecimals={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {data.byAssignee.map((_, i) => (

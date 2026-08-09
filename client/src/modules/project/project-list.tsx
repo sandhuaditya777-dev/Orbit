@@ -28,7 +28,7 @@ const STATUS_RING: Record<string, string> = {
   ACTIVE:    'ring-emerald-500/40',
   ON_HOLD:   'ring-amber-500/40',
   ARCHIVED:  'ring-slate-600/40',
-  COMPLETED: 'ring-indigo-500/40',
+  COMPLETED: 'ring-amber-400/40',
 };
 
 interface ProjectItemProps {
@@ -43,14 +43,14 @@ const ProjectItem = React.memo(({ project, isActive, onSelect }: ProjectItemProp
     whileTap={{ scale: 0.98 }}
     className={`group w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer ${
       isActive
-        ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25'
-        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-transparent'
     }`}
   >
     {/* Color swatch + icon */}
     <div
       className={`flex-shrink-0 h-6 w-6 rounded-lg flex items-center justify-center ring-2 ${
-        STATUS_RING[project.status] ?? 'ring-slate-700/40'
+        STATUS_RING[project.status] ?? 'ring-gray-300'
       }`}
       style={{ backgroundColor: project.color ?? '#6366f1' }}
     >
@@ -60,7 +60,7 @@ const ProjectItem = React.memo(({ project, isActive, onSelect }: ProjectItemProp
     {/* Name + identifier */}
     <div className="flex-1 min-w-0">
       <span className="text-sm font-medium truncate block">{project.name}</span>
-      <span className="text-[10px] text-slate-600 font-mono">{project.identifier}</span>
+      <span className="text-[10px] text-gray-400 font-mono">{project.identifier}</span>
     </div>
 
     {/* Priority dot */}
@@ -70,7 +70,7 @@ const ProjectItem = React.memo(({ project, isActive, onSelect }: ProjectItemProp
       }`}
     />
 
-    {isActive && <ChevronRight className="h-3 w-3 text-indigo-400 flex-shrink-0" />}
+    {isActive && <ChevronRight className="h-3 w-3 text-amber-500 flex-shrink-0" />}
   </motion.button>
 ));
 

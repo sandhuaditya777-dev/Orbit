@@ -45,11 +45,11 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<string, string> = {
-  NO_PRIORITY: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  LOW:         'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  MEDIUM:      'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  HIGH:        'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  URGENT:      'bg-red-500/10 text-red-400 border-red-500/20',
+  NO_PRIORITY: 'bg-gray-100 text-gray-500 border-gray-200',
+  LOW:         'bg-emerald-50 text-emerald-600 border-emerald-200',
+  MEDIUM:      'bg-amber-50 text-amber-600 border-amber-200',
+  HIGH:        'bg-orange-50 text-orange-600 border-orange-200',
+  URGENT:      'bg-red-50 text-red-600 border-red-200',
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -57,14 +57,14 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  TASK:  <CheckSquare className="h-3.5 w-3.5 text-indigo-400" />,
-  BUG:   <Bug         className="h-3.5 w-3.5 text-red-400"    />,
-  EPIC:  <Layers      className="h-3.5 w-3.5 text-violet-400" />,
-  STORY: <BookOpen    className="h-3.5 w-3.5 text-emerald-400"/>,
+  TASK:  <CheckSquare className="h-3.5 w-3.5 text-amber-500" />,
+  BUG:   <Bug         className="h-3.5 w-3.5 text-red-500"    />,
+  EPIC:  <Layers      className="h-3.5 w-3.5 text-purple-500" />,
+  STORY: <BookOpen    className="h-3.5 w-3.5 text-emerald-500"/>,
 };
 
 const STATUS_COLORS: Record<number, string> = {
-  0: 'bg-slate-400', 1: 'bg-indigo-400', 2: 'bg-amber-400', 3: 'bg-emerald-400',
+  0: 'bg-gray-400', 1: 'bg-amber-400', 2: 'bg-yellow-400', 3: 'bg-emerald-400',
 };
 
 // ── Sub-task progress bar ────────────────────────────────────────
@@ -80,15 +80,15 @@ function SubtaskProgress({ tasks, parentId }: { tasks: Task[]; parentId: string 
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1 rounded-full bg-slate-800 overflow-hidden">
+      <div className="flex-1 h-1 rounded-full bg-gray-200 overflow-hidden">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
-      <span className="text-[9px] font-bold text-slate-500 flex-shrink-0">
+      <span className="text-[9px] font-bold text-gray-400 flex-shrink-0">
         {done}/{subtasks.length}
       </span>
     </div>
@@ -139,12 +139,12 @@ function KanbanCardBody({
       ref={cardRef}
       style={style}
       {...dragHandleProps}
-      className={`group bg-slate-900 border rounded-xl p-3.5 flex flex-col gap-2.5 cursor-grab active:cursor-grabbing transition-all touch-none ${
+      className={`group bg-white border rounded-xl p-3.5 flex flex-col gap-2.5 cursor-grab active:cursor-grabbing transition-all touch-none ${
         isDragOverlay
-          ? 'border-indigo-500/50 shadow-2xl shadow-indigo-500/20 rotate-1 scale-105'
+          ? 'border-amber-400/60 shadow-2xl shadow-amber-400/20 rotate-1 scale-105'
           : isDragging
-          ? 'border-slate-700/30'
-          : 'border-slate-800/80 hover:border-slate-700 hover:shadow-lg hover:shadow-black/20'
+          ? 'border-gray-200/50 opacity-60'
+          : 'border-gray-200 hover:border-amber-300 hover:shadow-md hover:shadow-amber-100/80'
       }`}
       onClick={() => !isDragging && onClick(task)}
     >
@@ -152,11 +152,11 @@ function KanbanCardBody({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           {/* Drag handle (decorative — the whole card is draggable) */}
-          <div className="opacity-60 group-hover:opacity-100 transition-opacity p-0.5 rounded text-slate-500">
+          <div className="opacity-40 group-hover:opacity-100 transition-opacity p-0.5 rounded text-gray-400">
             <GripVertical className="h-3.5 w-3.5" />
           </div>
-          {TYPE_ICONS[task.type] || <CheckSquare className="h-3.5 w-3.5 text-slate-400" />}
-          <span className="text-[10px] font-mono font-bold text-slate-500 select-all">
+          {TYPE_ICONS[task.type] || <CheckSquare className="h-3.5 w-3.5 text-gray-400" />}
+          <span className="text-[10px] font-mono font-bold text-gray-400 select-all">
             {task.slug}
           </span>
         </div>
@@ -166,7 +166,7 @@ function KanbanCardBody({
           </span>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(task); }}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-500/15 text-slate-600 hover:text-red-400 transition-all cursor-pointer"
+            className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all cursor-pointer"
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -174,13 +174,13 @@ function KanbanCardBody({
       </div>
 
       {/* Title */}
-      <p className="text-sm font-semibold text-slate-100 group-hover:text-white leading-snug">
+      <p className="text-sm font-semibold text-gray-900 leading-snug">
         {task.title}
       </p>
 
       {/* Description */}
       {task.description && (
-        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{task.description}</p>
+        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{task.description}</p>
       )}
 
       {/* Subtask progress */}
@@ -190,7 +190,7 @@ function KanbanCardBody({
       {task.labels && task.labels.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {task.labels.map((label) => (
-            <span key={label} className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800/80 text-slate-400 border border-slate-700/60">
+            <span key={label} className="px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-600 border border-amber-200">
               {label}
             </span>
           ))}
@@ -198,7 +198,7 @@ function KanbanCardBody({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 gap-2">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <div className="flex items-center -space-x-1.5 overflow-hidden">
             {task.assigneeIds?.slice(0, 3).map((aid) => {
@@ -206,13 +206,13 @@ function KanbanCardBody({
               const name = u?.name || 'Assignee';
               const init = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
               return (
-                <div key={aid} className="h-5 w-5 rounded-full bg-slate-800 border border-slate-900 flex items-center justify-center text-[7px] font-bold text-slate-300 overflow-hidden ring-1 ring-slate-950" title={name}>
+                <div key={aid} className="h-5 w-5 rounded-full bg-amber-100 border border-white flex items-center justify-center text-[7px] font-bold text-amber-700 overflow-hidden ring-1 ring-white" title={name}>
                   {u?.avatar ? <img src={u.avatar} alt={name} className="h-full w-full object-cover" /> : init}
                 </div>
               );
             })}
             {task.assigneeIds && task.assigneeIds.length > 3 && (
-              <div className="h-5 w-5 rounded-full bg-indigo-950 border border-indigo-900 flex items-center justify-center text-[7px] font-bold text-indigo-300 ring-1 ring-slate-950">
+              <div className="h-5 w-5 rounded-full bg-amber-100 border border-white flex items-center justify-center text-[7px] font-bold text-amber-700 ring-1 ring-white">
                 +{task.assigneeIds.length - 3}
               </div>
             )}
@@ -222,7 +222,7 @@ function KanbanCardBody({
         <div className="flex items-center gap-2">
           {task.dueDate && (
             <span className={`text-[9px] font-medium font-mono px-1.5 py-0.5 rounded ${
-              isOverdue ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-slate-800/40 text-slate-500'
+              isOverdue ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-gray-100 text-gray-500'
             }`}>
               {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
             </span>
@@ -231,7 +231,7 @@ function KanbanCardBody({
             <button
               onClick={(e) => { e.stopPropagation(); onMoveNext(task); }}
               disabled={isUpdating}
-              className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-indigo-400 transition-colors disabled:opacity-40 cursor-pointer"
+              className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-amber-500 transition-colors disabled:opacity-40 cursor-pointer"
             >
               Move <ChevronRight className="h-3 w-3" />
             </button>
@@ -298,21 +298,21 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       className={`flex flex-col gap-3 border rounded-2xl p-4 min-h-[320px] transition-colors ${
-        isOver ? 'bg-indigo-500/5 border-indigo-500/40' : 'bg-slate-900/40 border-slate-800/60'
+        isOver ? 'bg-amber-50/60 border-amber-300' : 'bg-gray-50 border-gray-200'
       }`}
     >
       {/* Column header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${dotColor}`} />
-          <h3 className="text-sm font-bold text-slate-200">{status}</h3>
-          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+          <h3 className="text-sm font-bold text-gray-700">{status}</h3>
+          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white text-gray-500 border border-gray-200 shadow-sm">
             {tasks.length}
           </span>
         </div>
         <button
           onClick={() => openCreate(status)}
-          className="p-1 rounded-lg hover:bg-slate-800 text-slate-600 hover:text-slate-300 transition-colors cursor-pointer"
+          className="p-1 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
         </button>
@@ -341,7 +341,7 @@ function DroppableColumn({
           {tasks.length === 0 && (
             <button
               onClick={() => openCreate(status)}
-              className="flex-1 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-800 hover:border-indigo-500/30 text-slate-600 hover:text-slate-400 transition-colors p-6 text-xs font-medium cursor-pointer min-h-[80px]"
+              className="flex-1 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 hover:border-amber-400 text-gray-400 hover:text-amber-500 transition-colors p-6 text-xs font-medium cursor-pointer min-h-[80px]"
             >
               <Plus className="h-4 w-4" />
               Add task
@@ -517,9 +517,9 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
         {/* Board header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <FolderKanban className="h-5 w-5 text-indigo-400" />
-            <h2 className="text-lg font-bold text-white">{projectName}</h2>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
+            <FolderKanban className="h-5 w-5 text-amber-500" />
+            <h2 className="text-lg font-bold text-gray-900">{projectName}</h2>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200">
               {tasks.length} tasks
             </span>
           </div>
@@ -535,7 +535,7 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
                     const name = m?.name ?? uid;
                     const init = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
                     return (
-                      <div key={uid} title={`${name} is online`} className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 border-2 border-slate-950 flex items-center justify-center text-[8px] font-bold text-white">
+                      <div key={uid} title={`${name} is online`} className="h-6 w-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 border-2 border-white flex items-center justify-center text-[8px] font-bold text-white">
                         {m?.avatar ? <img src={m.avatar} alt={name} className="h-full w-full rounded-full object-cover" /> : init}
                       </div>
                     );
@@ -545,7 +545,7 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
               </div>
             )}
 
-            <Button onClick={() => openCreateForColumn(boardStatuses[0])} variant="default" className="shadow-lg shadow-indigo-600/20">
+            <Button onClick={() => openCreateForColumn(boardStatuses[0])} variant="default" className="shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-white border-0">
               <Plus className="h-4 w-4" /> Add Task
             </Button>
           </div>

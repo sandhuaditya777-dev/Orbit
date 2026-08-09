@@ -83,20 +83,20 @@ export default function CalendarView({ projectId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-indigo-400" />
-          <h2 className="text-lg font-bold text-white">{MONTHS[month]} {year}</h2>
+          <Calendar className="h-5 w-5 text-amber-500" />
+          <h2 className="text-lg font-bold text-gray-900">{MONTHS[month]} {year}</h2>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={prev} className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+          <button onClick={prev} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => { setMonth(today.getMonth()); setYear(today.getFullYear()); setSelectedDay(null); }}
-            className="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
+            className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-amber-50 hover:text-amber-600 border border-gray-200 transition-colors cursor-pointer"
           >
             Today
           </button>
-          <button onClick={next} className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+          <button onClick={next} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -105,7 +105,7 @@ export default function CalendarView({ projectId }: Props) {
       {/* Day names */}
       <div className="grid grid-cols-7 gap-1">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-semibold text-slate-500 py-1">{d}</div>
+          <div key={d} className="text-center text-[11px] font-semibold text-gray-400 py-1">{d}</div>
         ))}
       </div>
 
@@ -133,19 +133,19 @@ export default function CalendarView({ projectId }: Props) {
               onClick={() => setSelectedDay(isSelected ? null : day)}
               className={`relative min-h-[72px] p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
                 isSelected
-                  ? 'border-indigo-500/50 bg-indigo-500/10'
+                  ? 'border-amber-400 bg-amber-50/80 shadow-sm'
                   : dayTasks.length > 0
-                  ? 'border-slate-700/60 bg-slate-900/60 hover:border-slate-600'
-                  : 'border-slate-800/40 bg-slate-900/20 hover:border-slate-700/40'
+                  ? 'border-gray-200 bg-white hover:border-amber-300 hover:shadow-sm'
+                  : 'border-gray-100 bg-gray-50/50 hover:border-gray-300'
               }`}
             >
               {/* Day number */}
               <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 ${
                 isToday
-                  ? 'bg-indigo-500 text-white'
+                  ? 'bg-amber-500 text-white'
                   : isSelected
-                  ? 'text-indigo-300'
-                  : 'text-slate-400'
+                  ? 'text-amber-700'
+                  : 'text-gray-600'
               }`}>
                 {day}
               </span>
@@ -154,12 +154,12 @@ export default function CalendarView({ projectId }: Props) {
               <div className="flex flex-col gap-0.5 overflow-hidden">
                 {dayTasks.slice(0, 2).map((t) => (
                   <div key={t._id} className="flex items-center gap-1 overflow-hidden">
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${PRIORITY_DOT[t.priority] ?? 'bg-slate-500'}`} />
-                    <span className="text-[9px] text-slate-400 truncate leading-tight">{t.title}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${PRIORITY_DOT[t.priority] ?? 'bg-gray-400'}`} />
+                    <span className="text-[9px] text-gray-600 truncate leading-tight">{t.title}</span>
                   </div>
                 ))}
                 {dayTasks.length > 2 && (
-                  <span className="text-[9px] text-indigo-400 font-semibold">+{dayTasks.length - 2} more</span>
+                  <span className="text-[9px] text-amber-600 font-semibold">+{dayTasks.length - 2} more</span>
                 )}
               </div>
             </button>
@@ -174,25 +174,25 @@ export default function CalendarView({ projectId }: Props) {
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.25 }}
-          className="rounded-2xl border border-slate-800/60 bg-slate-900/50 p-5"
+          className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
         >
-          <p className="text-sm font-semibold text-slate-300 mb-3">
+          <p className="text-sm font-semibold text-gray-800 mb-3">
             {MONTHS[month]} {selectedDay} — {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} due
           </p>
 
           {selectedTasks.length === 0 ? (
-            <p className="text-slate-600 text-sm">No tasks due this day.</p>
+            <p className="text-gray-400 text-sm">No tasks due this day.</p>
           ) : (
             <div className="flex flex-col gap-2">
               {selectedTasks.map((t) => (
-                <div key={t._id} className="flex items-start gap-3 p-3 rounded-xl border border-slate-800 bg-slate-900">
-                  <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[t.priority] ?? 'bg-slate-500'}`} />
+                <div key={t._id} className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
+                  <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[t.priority] ?? 'bg-gray-400'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-slate-200 text-sm font-medium truncate">{t.title}</p>
+                    <p className="text-gray-800 text-sm font-medium truncate">{t.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-slate-500 font-mono">{t.slug}</span>
-                      <span className="text-[10px] text-slate-600">·</span>
-                      <span className="text-[10px] text-slate-500">{t.status}</span>
+                      <span className="text-[10px] text-gray-400 font-mono">{t.slug}</span>
+                      <span className="text-[10px] text-gray-300">·</span>
+                      <span className="text-[10px] text-gray-500">{t.status}</span>
                     </div>
                   </div>
                 </div>

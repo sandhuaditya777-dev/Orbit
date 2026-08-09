@@ -66,10 +66,10 @@ const CommentItem = React.memo(
             <img
               src={author.avatar}
               alt={name}
-              className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-800"
+              className="h-7 w-7 rounded-full object-cover ring-1 ring-gray-200"
             />
           ) : (
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[10px] font-bold text-white ring-1 ring-slate-800">
+            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-[10px] font-bold text-white ring-1 ring-gray-200">
               {initials}
             </div>
           )}
@@ -77,10 +77,10 @@ const CommentItem = React.memo(
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold text-slate-300">{name}</span>
-            <span className="text-[10px] text-slate-600">{formatTime(comment.createdAt)}</span>
+            <span className="text-xs font-semibold text-gray-800">{name}</span>
+            <span className="text-[10px] text-gray-400">{formatTime(comment.createdAt)}</span>
             {comment.isEdited && (
-              <span className="text-[10px] text-slate-600 italic">(edited)</span>
+              <span className="text-[10px] text-gray-400 italic">(edited)</span>
             )}
           </div>
 
@@ -89,20 +89,20 @@ const CommentItem = React.memo(
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[60px]"
+                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none focus:outline-none focus:ring-1 focus:ring-amber-400 min-h-[60px]"
                 autoFocus
               />
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
                   disabled={isUpdating}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   <Check className="h-3 w-3" /> Save
                 </button>
                 <button
                   onClick={() => { setEditing(false); setEditContent(comment.content); }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <X className="h-3 w-3" /> Cancel
                 </button>
@@ -110,14 +110,14 @@ const CommentItem = React.memo(
             </div>
           ) : (
             <div className="flex items-start gap-2">
-              <p className="text-sm text-slate-300 leading-relaxed flex-1 whitespace-pre-wrap break-words">
+              <p className="text-sm text-gray-700 leading-relaxed flex-1 whitespace-pre-wrap break-words">
                 {comment.content}
               </p>
               {isOwnComment && (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
                   <button
                     onClick={() => setEditing(true)}
-                    className="p-1 rounded hover:bg-slate-800 text-slate-600 hover:text-slate-300 transition-colors cursor-pointer"
+                    className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                     title="Edit"
                   >
                     <Pencil className="h-3 w-3" />
@@ -125,7 +125,7 @@ const CommentItem = React.memo(
                   <button
                     onClick={() => onDelete(comment._id)}
                     disabled={isDeleting}
-                    className="p-1 rounded hover:bg-red-500/15 text-slate-600 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+                    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
                     title="Delete"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -213,7 +213,7 @@ export default function CommentThread({ taskId, projectId, workspaceId, memberMa
 
   return (
     <div className="flex flex-col gap-4">
-      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-left">
         Comments ({comments.length})
       </h4>
 
@@ -221,10 +221,10 @@ export default function CommentThread({ taskId, projectId, workspaceId, memberMa
       <div className="flex flex-col gap-4 max-h-64 overflow-y-auto pr-1">
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="text-xs text-slate-600 text-center py-4">
+          <p className="text-xs text-gray-400 text-center py-4">
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -257,12 +257,12 @@ export default function CommentThread({ taskId, projectId, workspaceId, memberMa
           onKeyDown={handleKeyDown}
           placeholder="Write a comment… (Enter to send, Shift+Enter for newline)"
           rows={2}
-          className="flex-1 bg-slate-800/60 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500/80 focus:border-indigo-500/60 transition-all"
+          className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 transition-all shadow-sm"
         />
         <button
           type="submit"
           disabled={!content.trim() || createComment.isPending}
-          className="flex-shrink-0 p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          className="flex-shrink-0 p-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
         >
           {createComment.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />

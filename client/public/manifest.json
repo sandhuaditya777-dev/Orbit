@@ -4,8 +4,8 @@
   "description": "Kanban boards, real-time collaboration, activity logs, and smart notifications for modern engineering teams.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020817",
-  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "theme_color": "#F59E0B",
   "orientation": "portrait-primary",
   "icons": [
     {

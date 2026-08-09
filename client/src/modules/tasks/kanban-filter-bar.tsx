@@ -40,8 +40,8 @@ function FilterSelect({
         onChange={(e) => onChange(e.target.value)}
         className={`appearance-none pl-2.5 pr-6 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all outline-none ${
           active
-            ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
-            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-300'
+            ? 'bg-amber-50 border-amber-300 text-amber-700'
+            : 'bg-white border-gray-200 text-gray-600 hover:border-amber-300 hover:text-amber-600'
         }`}
       >
         <option value="">{label}</option>
@@ -49,7 +49,7 @@ function FilterSelect({
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
+      <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
     </div>
   );
 }
@@ -87,7 +87,7 @@ function ExportMenu({
       <button
         id="export-tasks-btn"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:border-slate-700 text-xs font-medium transition-all cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 hover:text-amber-600 hover:border-amber-300 text-xs font-medium transition-all cursor-pointer"
       >
         <Download size={13} /> Export
         <ChevronDown size={10} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -102,19 +102,19 @@ function ExportMenu({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.96 }}
               transition={{ duration: 0.14 }}
-              className="absolute right-0 top-full mt-1.5 z-20 w-36 rounded-xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden"
+              className="absolute right-0 top-full mt-1.5 z-20 w-36 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden"
             >
               <button
                 onClick={() => download('csv')}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-800/60 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-gray-700 hover:bg-amber-50 transition-colors cursor-pointer"
               >
-                <FileText size={13} className="text-emerald-400" /> Download CSV
+                <FileText size={13} className="text-emerald-500" /> Download CSV
               </button>
               <button
                 onClick={() => download('json')}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-800/60 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-gray-700 hover:bg-amber-50 transition-colors cursor-pointer"
               >
-                <FileJson size={13} className="text-amber-400" /> Download JSON
+                <FileJson size={13} className="text-amber-500" /> Download JSON
               </button>
             </motion.div>
           </>
@@ -157,10 +157,10 @@ export default function KanbanFilterBar({
       className="flex items-center gap-2 flex-wrap"
     >
       {/* Filter icon + count */}
-      <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium mr-0.5">
+      <div className="flex items-center gap-1.5 text-gray-500 text-xs font-medium mr-0.5">
         <Filter size={13} />
         {activeCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 text-[10px] font-bold">
+          <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[10px] font-bold">
             {activeCount}
           </span>
         )}
@@ -200,7 +200,7 @@ export default function KanbanFilterBar({
       {activeCount > 0 && (
         <button
           onClick={clearAll}
-          className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer border border-transparent hover:border-red-500/20"
+          className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer border border-transparent hover:border-red-200"
         >
           <X size={11} /> Clear
         </button>
@@ -208,7 +208,7 @@ export default function KanbanFilterBar({
 
       {/* Result count */}
       {activeCount > 0 && (
-        <span className="text-[11px] text-slate-600">
+        <span className="text-[11px] text-gray-500">
           {filteredTasks} / {totalTasks} tasks
         </span>
       )}

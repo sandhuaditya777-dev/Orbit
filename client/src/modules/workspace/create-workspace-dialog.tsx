@@ -60,14 +60,14 @@ export default function CreateWorkspaceDialog({ open, onClose, organizationId, o
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="bg-slate-900 border border-slate-800 text-slate-100 sm:max-w-md">
+      <DialogContent className="bg-white border border-slate-200 text-slate-900 sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center flex-shrink-0">
               <FolderOpen className="h-4.5 w-4.5 text-white" />
             </div>
             <div className="text-left">
-              <DialogTitle className="text-sm font-semibold text-white">
+              <DialogTitle className="text-sm font-semibold text-slate-900">
                 Create Workspace
               </DialogTitle>
               <DialogDescription className="text-[11px] text-slate-500">
@@ -79,10 +79,10 @@ export default function CreateWorkspaceDialog({ open, onClose, organizationId, o
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Workspace Name</label>
+            <label className="text-xs font-medium text-slate-500">Workspace Name</label>
             <Input
               placeholder="e.g. Engineering"
-              className="bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500"
+              className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-500"
               {...register('name', {
                 required: 'Workspace name is required',
                 validate: (value) => !!value.trim() || 'Workspace name cannot be empty',
@@ -94,12 +94,12 @@ export default function CreateWorkspaceDialog({ open, onClose, organizationId, o
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">
+            <label className="text-xs font-medium text-slate-500">
               Description <span className="text-slate-600">(optional)</span>
             </label>
             <Input
               placeholder="What is this workspace for?"
-              className="bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500"
+              className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-500"
               {...register('description')}
             />
           </div>
@@ -121,7 +121,7 @@ export default function CreateWorkspaceDialog({ open, onClose, organizationId, o
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900"
               disabled={isPending}
             >
               {isPending ? 'Creating…' : 'Create Workspace'}

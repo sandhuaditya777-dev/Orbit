@@ -116,17 +116,17 @@ export default function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="bg-slate-900 border border-slate-800 text-slate-100 sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white border border-gray-200 text-gray-900 sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center flex-shrink-0">
               <CheckSquare className="h-4.5 w-4.5 text-white" />
             </div>
             <div className="text-left">
-              <DialogTitle className="text-sm font-semibold text-white">
+              <DialogTitle className="text-sm font-semibold text-gray-900">
                 Create Task
               </DialogTitle>
-              <DialogDescription className="text-[11px] text-slate-500">
+              <DialogDescription className="text-[11px] text-gray-500">
                 Define the scope and assignments for this item
               </DialogDescription>
             </div>
@@ -135,28 +135,28 @@ export default function CreateTaskDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* Title */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Task Title</label>
+          <div className="flex flex-col gap-1.5 text-left">
+            <label className="text-xs font-medium text-gray-600">Task Title</label>
             <Input
               placeholder="e.g. Implement Auth Guard"
-              className="bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500"
+              className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
               {...register("title", {
                 required: "Task title is required",
                 validate: (value) => !!value.trim() || "Task title cannot be empty",
               })}
             />
             {errors.title && (
-              <p className="text-xs text-red-400">{errors.title.message}</p>
+              <p className="text-xs text-red-500">{errors.title.message}</p>
             )}
           </div>
 
           {/* Description */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">Description <span className="text-slate-600">(optional)</span></label>
+          <div className="flex flex-col gap-1.5 text-left">
+            <label className="text-xs font-medium text-gray-600">Description <span className="text-gray-400">(optional)</span></label>
             <Textarea
               placeholder="Add more context..."
               rows={3}
-              className="bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 resize-none"
+              className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 resize-none"
               {...register("description")}
             />
           </div>
@@ -164,15 +164,15 @@ export default function CreateTaskDialog({
           {/* Type + Status */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 text-left">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Type
               </span>
               <select
                 {...register("type")}
-                className="w-full bg-slate-800/50 border border-slate-700 text-sm text-slate-200 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full bg-white border border-gray-200 text-sm text-gray-800 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-amber-400"
               >
                 {TASK_TYPES.map((t) => (
-                  <option key={t.value} value={t.value} className="bg-slate-900">
+                  <option key={t.value} value={t.value} className="bg-white">
                     {t.label}
                   </option>
                 ))}
@@ -180,15 +180,15 @@ export default function CreateTaskDialog({
             </div>
 
             <div className="flex flex-col gap-1.5 text-left">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Status
               </span>
               <select
                 {...register("status")}
-                className="w-full bg-slate-800/50 border border-slate-700 text-sm text-slate-200 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full bg-white border border-gray-200 text-sm text-gray-800 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-amber-400"
               >
                 {statuses.map((s) => (
-                  <option key={s} value={s} className="bg-slate-900">
+                  <option key={s} value={s} className="bg-white">
                     {s}
                   </option>
                 ))}
@@ -198,15 +198,15 @@ export default function CreateTaskDialog({
 
           {/* Priority dropdown */}
           <div className="flex flex-col gap-1.5 text-left">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
               <Flag className="h-3.5 w-3.5" /> Priority
             </span>
             <select
               {...register("priority")}
-              className="w-full bg-slate-800/50 border border-slate-700 text-sm text-slate-200 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+              className="w-full bg-white border border-gray-200 text-sm text-gray-800 rounded-lg h-9 px-3 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
             >
               {PRIORITIES.map((p) => (
-                <option key={p.value} value={p.value} className="bg-slate-900">
+                <option key={p.value} value={p.value} className="bg-white">
                   {p.label}
                 </option>
               ))}
@@ -215,14 +215,14 @@ export default function CreateTaskDialog({
 
           {/* Assignees Selection */}
           <div className="flex flex-col gap-1.5 text-left">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5" /> Assignees
             </span>
             <Controller
               name="assigneeIds"
               control={control}
               render={({ field }) => (
-                <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto p-1 bg-slate-950/20 border border-slate-800/40 rounded-xl">
+                <div className="flex gap-2 flex-wrap max-h-24 overflow-y-auto p-1.5 bg-gray-50 border border-gray-200 rounded-xl">
                   {orgMembers.map((member) => {
                     const user = member.user || { name: `User ${member.userId}`, avatar: "" };
                     const initials = user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -240,11 +240,11 @@ export default function CreateTaskDialog({
                         }}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold transition-all ${
                           isSelected
-                            ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300 shadow-sm shadow-indigo-500/10"
-                            : "bg-slate-800/50 border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-600"
+                            ? "bg-amber-500 border-amber-500 text-white shadow-sm"
+                            : "bg-white border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300"
                         }`}
                       >
-                        <div className="h-4.5 w-4.5 rounded-full bg-indigo-600/30 border border-indigo-500/20 flex items-center justify-center text-[7px] font-bold text-indigo-200 overflow-hidden flex-shrink-0">
+                        <div className="h-4.5 w-4.5 rounded-full bg-amber-100 border border-white flex items-center justify-center text-[7px] font-bold text-amber-700 overflow-hidden flex-shrink-0">
                           {user.avatar ? (
                             <img src={user.avatar} alt={user.name} className="h-full w-full object-cover" />
                           ) : (
@@ -256,7 +256,7 @@ export default function CreateTaskDialog({
                     );
                   })}
                   {orgMembers.length === 0 && (
-                    <span className="text-xs text-slate-600 p-1 italic">No organization members found</span>
+                    <span className="text-xs text-gray-400 p-1 italic">No organization members found</span>
                   )}
                 </div>
               )}
@@ -265,18 +265,18 @@ export default function CreateTaskDialog({
 
           {/* Due Date only */}
           <div className="flex flex-col gap-1.5 text-left">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" /> Due Date
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-gray-400" /> Due Date
             </span>
             <Input
               type="date"
-              className="bg-slate-800/50 border-slate-700 text-slate-100"
+              className="bg-white border-gray-200 text-gray-900"
               {...register("dueDate")}
             />
           </div>
 
           {apiError && (
-            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
+            <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
               {(apiError as Error).message}
             </p>
@@ -294,7 +294,7 @@ export default function CreateTaskDialog({
             <Button
               type="submit"
               variant="default"
-              className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/15"
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 border-0"
               disabled={isPending}
             >
               {isPending ? "Creating…" : "Create Task"}

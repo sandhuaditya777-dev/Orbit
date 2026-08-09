@@ -16,25 +16,15 @@ interface LandingPageProps {
 /* ─── Animated mesh-gradient background ─────────────────────── */
 function MeshBackground() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-[#020817]">
-      {/* Deep gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950/30 to-slate-950" />
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-50">
+      {/* Clean light base */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-white" />
 
-      {/* Glowing orbs */}
+      {/* Single subtle warm glow behind hero */}
       <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-indigo-600/20 blur-[120px]"
-      />
-      <motion.div
-        animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-violet-600/15 blur-[140px]"
-      />
-      <motion.div
-        animate={{ x: [-20, 20, -20], y: [-10, 10, -10], opacity: [0.08, 0.15, 0.08] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px]"
+        animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-amber-200/30 blur-[120px]"
       />
 
       {/* Grid overlay */}
@@ -42,7 +32,7 @@ function MeshBackground() {
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            'linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px)',
           backgroundSize: '60px 60px',
         }}
       />
@@ -53,8 +43,8 @@ function MeshBackground() {
 /* ─── Floating task card (hero decoration) ───────────────────── */
 const DEMO_TASKS = [
   { id: 1, title: 'Implement OAuth2 flow', status: 'Done', priority: 'High', color: 'bg-emerald-500', assignee: 'AR' },
-  { id: 2, title: 'Realtime notifications', status: 'In Progress', priority: 'Urgent', color: 'bg-violet-500', assignee: 'KP' },
-  { id: 3, title: 'Dashboard analytics', status: 'To Do', priority: 'Medium', color: 'bg-indigo-500', assignee: 'SM' },
+  { id: 2, title: 'Realtime notifications', status: 'In Progress', priority: 'Urgent', color: 'bg-fuchsia-500', assignee: 'KP' },
+  { id: 3, title: 'Dashboard analytics', status: 'To Do', priority: 'Medium', color: 'bg-blue-500', assignee: 'SM' },
   { id: 4, title: 'Rate limiting + throttle', status: 'In Review', priority: 'High', color: 'bg-amber-500', assignee: 'RN' },
 ];
 
@@ -87,15 +77,15 @@ function FloatingTaskCard({
       className="absolute pointer-events-none select-none"
       style={{ left: `${x}%`, top: `${y}%` }}
     >
-      <div className="w-52 rounded-xl border border-slate-800/80 bg-slate-900/80 backdrop-blur-sm p-3 shadow-2xl shadow-black/40">
+      <div className="w-52 rounded-xl border border-slate-200 bg-white backdrop-blur-sm p-3 shadow-lg">
         <div className="flex items-start gap-2 mb-2">
           <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${task.color}`} />
-          <p className="text-slate-200 text-[11px] font-medium leading-snug">{task.title}</p>
+          <p className="text-slate-700 text-[11px] font-medium leading-snug">{task.title}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-800 text-slate-400 border border-slate-700">{task.status}</span>
+          <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 border border-slate-200">{task.status}</span>
           <span className={`px-1.5 py-0.5 rounded text-[9px] text-white ${task.color}`}>{task.priority}</span>
-          <div className="ml-auto w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[8px] font-bold text-white">
+          <div className="ml-auto w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-[8px] font-bold text-white">
             {task.assignee}
           </div>
         </div>
@@ -125,7 +115,7 @@ function FeatureCard({
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="group relative rounded-2xl border border-slate-800/60 bg-slate-900/50 p-6 backdrop-blur-sm hover:border-slate-700/80 transition-all duration-300"
+      className="group relative rounded-2xl border border-slate-200 bg-white p-6 backdrop-blur-sm hover:border-slate-300 hover:shadow-md transition-all duration-300"
     >
       {/* Glow on hover */}
       <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${gradient} blur-xl -z-10`} />
@@ -133,8 +123,8 @@ function FeatureCard({
       <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${gradient} mb-4 shadow-lg`}>
         <Icon size={20} className="text-white" />
       </div>
-      <h3 className="text-slate-100 font-semibold text-base mb-2">{title}</h3>
-      <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+      <h3 className="text-slate-900 font-semibold text-base mb-2">{title}</h3>
+      <p className="text-slate-600 text-sm leading-relaxed">{desc}</p>
     </motion.div>
   );
 }

@@ -55,19 +55,19 @@ export default function InviteMemberDialog({ orgId, orgName, open, onClose }: Pr
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-full max-w-md mx-4"
           >
-            <div className="rounded-2xl border border-slate-700/60 bg-slate-950 shadow-2xl overflow-hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/60">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/15">
-                    <UserPlus size={16} className="text-indigo-400" />
+                  <div className="p-1.5 rounded-lg bg-amber-50">
+                    <UserPlus size={16} className="text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">Invite to {orgName}</p>
-                    <p className="text-[11px] text-slate-500">They'll receive an email with a join link</p>
+                    <p className="text-sm font-semibold text-gray-900">Invite to {orgName}</p>
+                    <p className="text-[11px] text-gray-500">They'll receive an email with a join link</p>
                   </div>
                 </div>
-                <button onClick={handleClose} className="p-1 rounded text-slate-600 hover:text-slate-300 transition-colors cursor-pointer">
+                <button onClick={handleClose} className="p-1 rounded text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                   <X size={16} />
                 </button>
               </div>
@@ -80,14 +80,14 @@ export default function InviteMemberDialog({ orgId, orgName, open, onClose }: Pr
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex flex-col items-center gap-3 py-6 text-center"
                   >
-                    <div className="p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                      <CheckCircle2 size={28} className="text-emerald-400" />
+                    <div className="p-4 rounded-full bg-emerald-50 border border-emerald-200">
+                      <CheckCircle2 size={28} className="text-emerald-500" />
                     </div>
-                    <p className="text-white font-semibold">Invite Sent!</p>
-                    <p className="text-slate-500 text-sm">An invitation email was dispatched to <span className="text-slate-300">{email}</span></p>
+                    <p className="text-gray-900 font-semibold">Invite Sent!</p>
+                    <p className="text-gray-500 text-sm">An invitation email was dispatched to <span className="text-gray-700 font-medium">{email}</span></p>
                     <button
                       onClick={() => { setEmail(''); setStatus('idle'); }}
-                      className="mt-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors cursor-pointer"
+                      className="mt-2 text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors cursor-pointer"
                     >
                       Send another invite
                     </button>
@@ -95,11 +95,11 @@ export default function InviteMemberDialog({ orgId, orgName, open, onClose }: Pr
                 ) : (
                   <form onSubmit={send} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-slate-400" htmlFor="invite-email">
+                      <label className="text-xs font-semibold text-gray-600" htmlFor="invite-email">
                         Email address
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-800 bg-slate-900 focus-within:border-indigo-500/50 transition-colors">
-                        <Mail size={14} className="text-slate-500 flex-shrink-0" />
+                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition-colors">
+                        <Mail size={14} className="text-gray-400 flex-shrink-0" />
                         <input
                           id="invite-email"
                           type="email"
@@ -107,7 +107,7 @@ export default function InviteMemberDialog({ orgId, orgName, open, onClose }: Pr
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="colleague@company.com"
-                          className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-600 outline-none"
+                          className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
                           autoFocus
                         />
                       </div>
@@ -117,7 +117,7 @@ export default function InviteMemberDialog({ orgId, orgName, open, onClose }: Pr
                       id="send-invite-btn"
                       type="submit"
                       disabled={status === 'loading' || !email}
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold shadow-lg shadow-indigo-500/20 hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold shadow-md shadow-amber-500/20 disabled:opacity-50 transition-all cursor-pointer"
                     >
                       {status === 'loading'
                         ? <Loader2 size={16} className="animate-spin" />

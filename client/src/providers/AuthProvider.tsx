@@ -68,14 +68,35 @@ function Auth0Sync({ children }: { children: React.ReactNode }) {
             (Date.now() + SESSION_TTL_MS).toString(),
           );
 
+          // Determine best display name from Auth0 profile
+          const displayName =
+            auth0User.name && !auth0User.name.includes('@')
+              ? auth0User.name
+              : auth0User.nickname || auth0User.given_name || auth0User.email?.split('@')[0] || 'User';
+
           const mappedUser: User = {
             sub: auth0User.sub || '',
-            name: auth0User.name || auth0User.nickname || 'User',
+            name: displayName,
             email: auth0User.email || '',
+            avatar: auth0User.picture,
             roles: (auth0User['https://cosync.com/roles'] as string[]) || ['member'],
           };
 
           login(mappedUser);
+
+          // Sync user profile with MongoDB server backend
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/users/sync`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: displayName,
+              email: auth0User.email || '',
+              avatar: auth0User.picture,
+            }),
+          }).catch((err) => console.warn('User sync error:', err));
         } catch (error) {
           console.error('Error fetching Auth0 access token:', error);
           clearSession();

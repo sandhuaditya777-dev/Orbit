@@ -11,6 +11,7 @@ import {
   OrganizationMemberSchema,
 } from '../../database/schemas/organization-member.schema';
 import { Workspace, WorkspaceSchema } from '../../database/schemas/workspace.schema';
+import { OrgInvite, OrgInviteSchema } from '../../database/schemas/org-invite.schema';
 import { UsersModule } from '../users/users.module';
 import { MailModule } from '../mail/mail.module';
 
@@ -20,6 +21,7 @@ import { MailModule } from '../mail/mail.module';
       { name: Organization.name, schema: OrganizationSchema },
       { name: OrganizationMember.name, schema: OrganizationMemberSchema },
       { name: Workspace.name, schema: WorkspaceSchema },
+      { name: OrgInvite.name, schema: OrgInviteSchema },
     ]),
     UsersModule,
     MailModule,

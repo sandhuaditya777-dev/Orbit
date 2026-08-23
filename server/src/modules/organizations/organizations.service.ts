@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  GoneException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -15,13 +16,15 @@ import {
   OrganizationMemberDocument,
 } from '../../database/schemas/organization-member.schema';
 import { Workspace, WorkspaceDocument } from '../../database/schemas/workspace.schema';
+import { OrgInvite, OrgInviteDocument } from '../../database/schemas/org-invite.schema';
 import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
   UpdateOrgMemberDto,
 } from './dto/organization.dto';
-
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class OrganizationsService {
@@ -32,7 +35,10 @@ export class OrganizationsService {
     private memberModel: Model<OrganizationMemberDocument>,
     @InjectModel(Workspace.name)
     private workspaceModel: Model<WorkspaceDocument>,
+    @InjectModel(OrgInvite.name)
+    private inviteModel: Model<OrgInviteDocument>,
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
   ) {}
 
   // ─── Slug generation ────────────────────────────────────────────────────────
@@ -158,9 +164,10 @@ export class OrganizationsService {
   async remove(orgId: string, userId: string): Promise<void> {
     await this.requireRole(userId, orgId, ['OWNER']);
 
-    // Cascade delete: workspaces → members → org
+    // Cascade delete: workspaces → members → invites → org
     await this.workspaceModel.deleteMany({ organizationId: orgId });
     await this.memberModel.deleteMany({ organizationId: orgId });
+    await this.inviteModel.deleteMany({ organizationId: orgId });
     await this.orgModel.findByIdAndDelete(orgId);
   }
 
@@ -169,7 +176,7 @@ export class OrganizationsService {
   async listMembers(orgId: string, userId: string) {
     await this.requireMembership(userId, orgId);
     const members = await this.memberModel.find({ organizationId: orgId }).exec();
-    
+
     // Populate user profiles
     const populated = await Promise.all(
       members.map(async (m) => {
@@ -217,5 +224,171 @@ export class OrganizationsService {
     }
 
     await this.memberModel.findByIdAndDelete(memberId);
+  }
+
+  // ─── Invite ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Smart invite:
+   *  - If the email already belongs to an Orbit user → add them directly as a member
+   *  - Otherwise → create a pending OrgInvite token and send an email
+   */
+  async sendInvite(
+    orgId: string,
+    inviterId: string,
+    dto: { email: string; role?: string; inviterName?: string; orgName?: string },
+  ): Promise<{ type: 'added' | 'invited'; message: string }> {
+    await this.requireRole(inviterId, orgId, ['OWNER', 'MANAGER']);
+
+    const org = await this.orgModel.findById(orgId);
+    if (!org) throw new NotFoundException('Organization not found');
+
+    const role = (dto.role as any) ?? 'MEMBER';
+    const orgName = dto.orgName ?? org.name;
+    const inviterName = dto.inviterName ?? 'A team member';
+
+    // Check if this email already belongs to an Orbit user
+    const existingUser = await this.usersService.findByEmail(dto.email);
+
+    if (existingUser) {
+      // Check if already a member
+      const alreadyMember = await this.getMembership(existingUser._id as string, orgId);
+      if (alreadyMember) {
+        throw new ConflictException('This user is already a member of the organization');
+      }
+
+      // Add directly
+      await this.memberModel.create({
+        userId: existingUser._id as string,
+        organizationId: orgId,
+        role,
+      });
+
+      return {
+        type: 'added',
+        message: `${existingUser.name} was already on Orbit and has been added to ${orgName}`,
+      };
+    }
+
+    // Check for an existing pending (unused, non-expired) invite for this email+org
+    const existingInvite = await this.inviteModel.findOne({
+      email: dto.email,
+      organizationId: orgId,
+      usedAt: null,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (existingInvite) {
+      throw new ConflictException(
+        'A pending invite already exists for this email. Use resend to refresh it.',
+      );
+    }
+
+    // Create a secure invite token
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await this.inviteModel.create({
+      token,
+      organizationId: orgId,
+      email: dto.email,
+      role,
+      invitedBy: inviterId,
+      expiresAt,
+      usedAt: null,
+    });
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const inviteUrl = `${appUrl}?invite_token=${token}`;
+
+    this.mailService.sendInvite({ to: dto.email, orgName, inviterName, inviteUrl });
+
+    return {
+      type: 'invited',
+      message: `Invite email sent to ${dto.email}`,
+    };
+  }
+
+  /**
+   * Accept an invite by token — called after the invitee signs in via Auth0.
+   * Returns the org so the client can activate it.
+   */
+  async acceptInvite(
+    token: string,
+    userId: string,
+  ): Promise<OrganizationDocument> {
+    const invite = await this.inviteModel.findOne({ token });
+
+    if (!invite) throw new NotFoundException('Invite not found or already used');
+    if (invite.usedAt) throw new GoneException('This invite has already been used');
+    if (invite.expiresAt < new Date()) throw new GoneException('This invite has expired');
+
+    // Idempotent — silently skip if already a member
+    const alreadyMember = await this.getMembership(userId, invite.organizationId);
+    if (!alreadyMember) {
+      await this.memberModel.create({
+        userId,
+        organizationId: invite.organizationId,
+        role: invite.role,
+      });
+    }
+
+    // Mark invite as used
+    invite.usedAt = new Date();
+    await invite.save();
+
+    const org = await this.orgModel.findById(invite.organizationId);
+    if (!org) throw new NotFoundException('Organization not found');
+    return org;
+  }
+
+  // ─── Pending Invites ─────────────────────────────────────────────────────────
+
+  async listPendingInvites(orgId: string, userId: string) {
+    await this.requireRole(userId, orgId, ['OWNER', 'MANAGER']);
+    return this.inviteModel
+      .find({
+        organizationId: orgId,
+        usedAt: null,
+        expiresAt: { $gt: new Date() },
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async cancelInvite(inviteId: string, userId: string): Promise<void> {
+    const invite = await this.inviteModel.findById(inviteId);
+    if (!invite) throw new NotFoundException('Invite not found');
+    await this.requireRole(userId, invite.organizationId, ['OWNER', 'MANAGER']);
+    await this.inviteModel.findByIdAndDelete(inviteId);
+  }
+
+  async resendInvite(
+    inviteId: string,
+    userId: string,
+    inviterName?: string,
+  ): Promise<void> {
+    const invite = await this.inviteModel.findById(inviteId);
+    if (!invite) throw new NotFoundException('Invite not found');
+    await this.requireRole(userId, invite.organizationId, ['OWNER', 'MANAGER']);
+
+    const org = await this.orgModel.findById(invite.organizationId);
+    if (!org) throw new NotFoundException('Organization not found');
+
+    // Reset expiry and generate a fresh token
+    invite.token = crypto.randomUUID();
+    invite.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    invite.usedAt = null;
+    await invite.save();
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const inviteUrl = `${appUrl}?invite_token=${invite.token}`;
+
+    this.mailService.sendInvite({
+      to: invite.email,
+      orgName: org.name,
+      inviterName: inviterName ?? 'A team member',
+      inviteUrl,
+    });
   }
 }

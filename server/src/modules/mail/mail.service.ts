@@ -166,8 +166,35 @@ export class MailService {
           </div>
         </div>
       `,
-    }).catch(() => {
-      /* fire and forget */
-    });
+    }).catch(() => { /* fire and forget */ });
+  }
+
+  /** Workspace invite email */
+  sendWorkspaceInvite(opts: {
+    to: string;
+    inviterName: string;
+    workspaceName: string;
+    role: string;
+    appUrl: string;
+  }): void {
+    this.sendMail({
+      to: opts.to,
+      subject: `[Orbit] ${opts.inviterName} invited you to the "${opts.workspaceName}" workspace`,
+      html: `
+        <div style="font-family:'Geist',Inter,sans-serif;max-width:520px;margin:0 auto;background:#ffffff;color:#1e293b;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05)">
+          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:28px 32px">
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#ffffff">&#x1F680; You're Invited!</h1>
+          </div>
+          <div style="padding:28px 32px">
+            <p style="margin:0 0 16px;font-size:16px;color:#0f172a"><strong>${opts.inviterName}</strong> invited you to join the <strong>${opts.workspaceName}</strong> workspace on Orbit as <strong>${opts.role}</strong>.</p>
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px 20px;margin-bottom:24px">
+              <p style="margin:0;font-size:14px;color:#92400e">To accept, log in to Orbit and open the <strong>Invites</strong> tab in the sidebar.</p>
+            </div>
+            <a href="${opts.appUrl}" style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 12px rgba(245,158,11,0.25)">Open Orbit</a>
+            <p style="margin:24px 0 0;color:#94a3b8;font-size:12px">This invite expires in 7 days. If you didn't expect this, you can safely ignore it.</p>
+          </div>
+        </div>
+      `,
+    }).catch(() => { /* fire and forget */ });
   }
 }

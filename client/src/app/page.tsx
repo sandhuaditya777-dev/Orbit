@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Orbit, LogOut, ChevronRight, Columns2, BarChart2, CalendarDays, UserPlus,
+  Orbit, LogOut, ChevronRight, Columns2, BarChart2, CalendarDays, UserPlus, Users, Mail,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth.store';
@@ -11,6 +11,8 @@ import { useUIStore } from '@/store/ui.store';
 import { useProject } from '@/api/projects';
 import { useAuth0 } from '@auth0/auth0-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useOrganizations } from '@/api/organizations';
+import { useWorkspaces, useWorkspace, useIncomingInvites } from '@/api/workspaces';
 
 import OrgSwitcher from '@/modules/org/org-switcher';
 import WorkspaceSwitcher from '@/modules/workspace/workspace-switcher';
@@ -23,6 +25,8 @@ import CommandPalette from '@/modules/search/command-palette';
 import AnalyticsPanel from '@/modules/project/analytics-panel';
 import CalendarView from '@/modules/project/calendar-view';
 import InviteMemberDialog from '@/modules/org/invite-member-dialog';
+import OrgMembersPanel from '@/modules/org/org-members-panel';
+import IncomingInvitesPanel from '@/modules/workspace/incoming-invites-panel';
 import { Button } from '@/components/ui/button';
 import {
   SidebarProvider,
@@ -48,6 +52,8 @@ export default function Home() {
   const [wsDialogOpen, setWsDialogOpen] = useState(false);
   const [projDialogOpen, setProjDialogOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [incomingInvitesOpen, setIncomingInvitesOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'analytics' | 'calendar'>('kanban');
 
   // Health check
@@ -62,7 +68,10 @@ export default function Home() {
     refetchInterval: 20000,
   });
 
+  const { data: orgs = [] } = useOrganizations();
+  const { data: activeWorkspace } = useWorkspace(activeWorkspaceId);
   const { data: activeProject, isLoading: isProjectLoading, error: projectError } = useProject(activeProjectId);
+  const { data: incomingInvites = [] } = useIncomingInvites();
 
   const handleLogout = () => {
     localStorage.removeItem('orbit_token');
@@ -73,10 +82,8 @@ export default function Home() {
   // Try silent auth first — only redirect to Auth0 login page if no session exists
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      // Attempt invisible silent authentication using existing Auth0 session
       getAccessTokenSilently()
         .catch(() => {
-          // No session at all — must redirect to Auth0 login page
           loginWithRedirect();
         });
     }
@@ -84,8 +91,6 @@ export default function Home() {
 
   if (error) return <ErrorScreen error={error} handleLogout={handleLogout} />;
   if (isLoading || !isAuthenticated) return <LoadingScreen />;
-
-
 
   return (
     <SidebarProvider>
@@ -115,6 +120,34 @@ export default function Home() {
           </SidebarHeader>
 
           <SidebarContent className="flex flex-col gap-3 p-4">
+            {/* Members & Invites shortcuts */}
+            <div className="flex items-center gap-1.5">
+              {activeOrgId && (
+                <button
+                  onClick={() => setMembersOpen(true)}
+                  className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Users size={13} />
+                  Members
+                </button>
+              )}
+
+              {/* Incoming Invites Badge */}
+              <button
+                onClick={() => setIncomingInvitesOpen(true)}
+                className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 text-xs font-medium transition-colors cursor-pointer"
+                title="Incoming workspace invites"
+              >
+                <Mail size={13} />
+                Invites
+                {incomingInvites.length > 0 && (
+                  <span className="h-4 min-w-[16px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {incomingInvites.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
             {/* Workspace Switcher */}
             <div>
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2 px-1">
@@ -184,14 +217,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Search — hidden for now, code kept for future use */}
-            {/* {activeWorkspaceId && (
-              <CommandPalette
-                workspaceId={activeWorkspaceId}
-                onSelectProject={(id) => setActiveProjectId(id)}
-              />
-            )} */}
-
             {/* View toggle (only when a project is active) */}
             {activeProjectId && (
               <div className="flex items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 gap-0.5">
@@ -231,14 +256,14 @@ export default function Home() {
               </div>
             )}
 
-            {/* API Status + Notifications */}
+            {/* API Status + Notifications + Invite */}
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell />
-              {activeOrgId && (
+              {activeWorkspaceId && (
                 <button
                   id="invite-member-btn"
                   onClick={() => setInviteOpen(true)}
-                  title="Invite team member"
+                  title="Invite member to workspace"
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:text-amber-600 hover:border-amber-500/30 text-xs font-medium transition-all cursor-pointer"
                 >
                   <UserPlus size={13} /> Invite
@@ -352,13 +377,13 @@ export default function Home() {
                   )}
                 </motion.div>
               )}
-            </AnimatePresence>
+              </AnimatePresence>
             </ErrorBoundary>
           </main>
         </div>
       </div>
 
-      {/* ── DIALOGS ──────────────────────────────────────────── */}
+      {/* ── DIALOGS & PANELS ──────────────────────────────────────────── */}
       {activeOrgId && (
         <CreateWorkspaceDialog
           open={wsDialogOpen}
@@ -378,14 +403,38 @@ export default function Home() {
         />
       )}
 
-      {activeOrgId && (
+      {activeWorkspaceId && activeWorkspace && (
         <InviteMemberDialog
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}
-          orgId={activeOrgId}
-          orgName={"your organization"}
+          workspaceId={activeWorkspaceId}
+          workspaceName={activeWorkspace.name}
         />
       )}
+
+      {activeOrgId && (() => {
+        const activeOrg = orgs.find((o) => o._id === activeOrgId);
+        const orgName = activeOrg?.name ?? 'your organization';
+        return (
+          <OrgMembersPanel
+            open={membersOpen}
+            onClose={() => setMembersOpen(false)}
+            onInvite={() => { setMembersOpen(false); setInviteOpen(true); }}
+            orgId={activeOrgId}
+            orgName={orgName}
+          />
+        );
+      })()}
+
+      <IncomingInvitesPanel
+        open={incomingInvitesOpen}
+        onClose={() => setIncomingInvitesOpen(false)}
+        onSelectWorkspace={(wsId, orgId) => {
+          setActiveOrgId(orgId);
+          setActiveWorkspaceId(wsId);
+          setActiveProjectId(null);
+        }}
+      />
     </SidebarProvider>
   );
 }

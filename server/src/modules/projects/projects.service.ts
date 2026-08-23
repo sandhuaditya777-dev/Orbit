@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { Project, ProjectDocument } from '../../database/schemas/project.schema';
 import { Workflow, WorkflowDocument, TaskStatus, TaskStatusDocument } from '../../database/schemas/workflow.schema';
 import { OrganizationMember, OrganizationMemberDocument } from '../../database/schemas/organization-member.schema';
+import { Workspace, WorkspaceDocument } from '../../database/schemas/workspace.schema';
 import {
   CreateProjectDto,
   UpdateProjectDto,
@@ -32,6 +33,7 @@ export class ProjectsService {
     @InjectModel(Workflow.name) private workflowModel: Model<WorkflowDocument>,
     @InjectModel(TaskStatus.name) private statusModel: Model<TaskStatusDocument>,
     @InjectModel(OrganizationMember.name) private orgMemberModel: Model<OrganizationMemberDocument>,
+    @InjectModel(Workspace.name) private workspaceModel: Model<WorkspaceDocument>,
   ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -116,7 +118,20 @@ export class ProjectsService {
   }
 
   async findAllInWorkspace(workspaceId: string, userId: string): Promise<ProjectDocument[]> {
-    // Return projects where user is a member or org OWNER/MANAGER
+    // Any org member can see all projects — derive org from the workspace
+    const workspace = await this.workspaceModel.findById(workspaceId).lean();
+
+    if (workspace) {
+      const orgId = (workspace as any).organizationId as string;
+      const isOrgMember = await this.orgMemberModel.findOne({ userId, organizationId: orgId });
+      if (isOrgMember) {
+        return this.projectModel
+          .find({ workspaceId, isArchived: false })
+          .sort({ createdAt: -1 });
+      }
+    }
+
+    // Fallback: only return projects the user is explicitly a member of
     const allProjects = await this.projectModel
       .find({ workspaceId, isArchived: false })
       .sort({ createdAt: -1 });
@@ -129,8 +144,17 @@ export class ProjectsService {
   async findById(id: string, userId: string): Promise<ProjectDocument> {
     const project = await this.projectModel.findById(id);
     if (!project) throw new NotFoundException('Project not found');
-    const isMember = project.members.some((m) => m.userId === userId);
-    if (!isMember) throw new ForbiddenException('Access denied');
+
+    // Allow access if user is an org member OR a project member
+    const isOrgMember = await this.orgMemberModel.findOne({
+      userId,
+      organizationId: project.organizationId,
+    });
+    if (!isOrgMember) {
+      const isProjectMember = project.members.some((m) => m.userId === userId);
+      if (!isProjectMember) throw new ForbiddenException('Access denied');
+    }
+
     return project;
   }
 

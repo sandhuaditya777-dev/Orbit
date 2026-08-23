@@ -8,7 +8,8 @@ export type NotificationType =
   | 'TASK_UPDATED'
   | 'COMMENT_CREATED'
   | 'MENTION'
-  | 'STATUS_CHANGED';
+  | 'STATUS_CHANGED'
+  | 'WORKSPACE_INVITE';
 
 @Schema({ timestamps: true })
 export class Notification {
@@ -23,7 +24,7 @@ export class Notification {
   @Prop({ required: true })
   actorName: string;
 
-  @Prop({ required: true, enum: ['TASK_ASSIGNED', 'TASK_UPDATED', 'COMMENT_CREATED', 'MENTION', 'STATUS_CHANGED'] })
+  @Prop({ required: true, enum: ['TASK_ASSIGNED', 'TASK_UPDATED', 'COMMENT_CREATED', 'MENTION', 'STATUS_CHANGED', 'WORKSPACE_INVITE'] })
   type: NotificationType;
 
   @Prop({ required: true })

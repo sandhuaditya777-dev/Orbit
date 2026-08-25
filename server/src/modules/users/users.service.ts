@@ -14,9 +14,28 @@ export class UsersService {
     const existingUser = await this.userModel.findById(sub).exec();
     if (existingUser) {
       let dirty = false;
-      if (existingUser.name !== data.name) { existingUser.name = data.name; dirty = true; }
-      if (existingUser.email !== data.email) { existingUser.email = data.email; dirty = true; }
-      if (data.avatar && existingUser.avatar !== data.avatar) { existingUser.avatar = data.avatar; dirty = true; }
+      if (
+        data.name &&
+        data.name !== 'Anonymous User' &&
+        data.name !== 'Orbit User' &&
+        existingUser.name !== data.name
+      ) {
+        existingUser.name = data.name;
+        dirty = true;
+      }
+      if (
+        data.email &&
+        !data.email.endsWith('@placeholder.local') &&
+        !data.email.endsWith('@example.com') &&
+        existingUser.email !== data.email
+      ) {
+        existingUser.email = data.email;
+        dirty = true;
+      }
+      if (data.avatar && existingUser.avatar !== data.avatar) {
+        existingUser.avatar = data.avatar;
+        dirty = true;
+      }
       if (dirty) return existingUser.save();
       return existingUser;
     }

@@ -26,16 +26,28 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
       throw new UnauthorizedException('Invalid token payload');
     }
 
-    // 2. Auto-provision user from Auth0 token claims
-    const name = payload.name || payload.nickname || 'Anonymous User';
-    const email = payload.email || `${payload.sub}@example.com`;
-    const avatar = payload.picture || '';
+    // 2. Look up existing DB user first — avoid overwriting real profile with JWT fallbacks.
+    //    Auth0 access tokens often omit name/email; the real profile comes from /users/sync.
+    let dbUser = await this.usersService.findById(payload.sub);
 
-    const dbUser = await this.usersService.findOrCreateUser(payload.sub, {
-      name,
-      email,
-      avatar,
-    });
+    if (!dbUser) {
+      // First-ever request from this user — bootstrap a minimal record.
+      // Prefer JWT claims if present; fall back to email prefix (never 'Anonymous User').
+      const rawName: string =
+        payload.name && !payload.name.includes('@')
+          ? payload.name
+          : payload.nickname ||
+            (payload.email ? (payload.email as string).split('@')[0] : null) ||
+            'Orbit User';
+
+      const rawEmail: string = payload.email || `${payload.sub}@placeholder.local`;
+
+      dbUser = await this.usersService.findOrCreateUser(payload.sub, {
+        name: rawName,
+        email: rawEmail,
+        avatar: payload.picture || '',
+      });
+    }
 
     // 3. Replace request.user with fully-typed user context
     request.user = {

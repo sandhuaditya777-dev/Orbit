@@ -13,6 +13,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useOrganizations } from '@/api/organizations';
 import { useWorkspaces, useWorkspace, useIncomingInvites } from '@/api/workspaces';
+import { usePermissions } from '@/hooks/usePermissions';
 
 import OrgSwitcher from '@/modules/org/org-switcher';
 import WorkspaceSwitcher from '@/modules/workspace/workspace-switcher';
@@ -48,6 +49,12 @@ export default function Home() {
     activeWorkspaceId, activeProjectId,
     setActiveWorkspaceId, setActiveProjectId,
   } = useUIStore();
+
+  const {
+    canCreateWorkspace,
+    canCreateProject,
+    canInviteToWorkspace,
+  } = usePermissions(activeOrgId, activeWorkspaceId);
 
   const [wsDialogOpen, setWsDialogOpen] = useState(false);
   const [projDialogOpen, setProjDialogOpen] = useState(false);
@@ -259,7 +266,7 @@ export default function Home() {
             {/* API Status + Notifications + Invite */}
             <div className="ml-auto flex items-center gap-2">
               <NotificationsBell />
-              {activeWorkspaceId && (
+              {activeWorkspaceId && canInviteToWorkspace && (
                 <button
                   id="invite-member-btn"
                   onClick={() => setInviteOpen(true)}
@@ -384,7 +391,7 @@ export default function Home() {
       </div>
 
       {/* ── DIALOGS & PANELS ──────────────────────────────────────────── */}
-      {activeOrgId && (
+      {activeOrgId && canCreateWorkspace && (
         <CreateWorkspaceDialog
           open={wsDialogOpen}
           onClose={() => setWsDialogOpen(false)}
@@ -393,7 +400,7 @@ export default function Home() {
         />
       )}
 
-      {activeWorkspaceId && (
+      {activeWorkspaceId && canCreateProject && (
         <CreateProjectDialog
           open={projDialogOpen}
           onClose={() => setProjDialogOpen(false)}
@@ -403,7 +410,7 @@ export default function Home() {
         />
       )}
 
-      {activeWorkspaceId && activeWorkspace && (
+      {activeWorkspaceId && activeWorkspace && canInviteToWorkspace && (
         <InviteMemberDialog
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}

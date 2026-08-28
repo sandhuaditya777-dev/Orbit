@@ -18,8 +18,14 @@ export class TasksController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new task inside a project' })
-  create(@User('sub') userId: string, @Body() dto: CreateTaskDto) {
-    return this.tasksService.create(userId, dto);
+  create(
+    @User('sub') userId: string,
+    @User('name') userName: string,
+    @User('email') userEmail: string,
+    @Body() dto: CreateTaskDto,
+  ) {
+    const actor = (userName && userName !== 'Someone') ? userName : (userEmail || 'Team member');
+    return this.tasksService.create(userId, dto, actor);
   }
 
   @Get('export')
@@ -111,14 +117,23 @@ export class TasksController {
   update(
     @Param('id') id: string,
     @User('sub') userId: string,
+    @User('name') userName: string,
+    @User('email') userEmail: string,
     @Body() dto: UpdateTaskDto,
   ) {
-    return this.tasksService.update(id, userId, dto);
+    const actor = (userName && userName !== 'Someone') ? userName : (userEmail || 'Team member');
+    return this.tasksService.update(id, userId, dto, actor);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a task' })
-  remove(@Param('id') id: string, @User('sub') userId: string) {
-    return this.tasksService.delete(id, userId);
+  remove(
+    @Param('id') id: string,
+    @User('sub') userId: string,
+    @User('name') userName: string,
+    @User('email') userEmail: string,
+  ) {
+    const actor = (userName && userName !== 'Someone') ? userName : (userEmail || 'Team member');
+    return this.tasksService.delete(id, userId, actor);
   }
 }

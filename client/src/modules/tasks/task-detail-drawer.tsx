@@ -10,6 +10,7 @@ import {
 import { useUpdateTask } from '@/api/tasks';
 import { useOrgMembers } from '@/api/organizations';
 import { useUIStore } from '@/store/ui.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useSocketEvent } from '@/hooks/useSocket';
 import { useQueryClient } from '@tanstack/react-query';
 import CommentThread from '@/modules/comments/comment-thread';
@@ -47,12 +48,14 @@ function EditableText({
   className = '',
   placeholder = '',
   multiline = false,
+  readOnly = false,
 }: {
   value: string;
   onSave: (v: string) => void;
   className?: string;
   placeholder?: string;
   multiline?: boolean;
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -72,7 +75,7 @@ function EditableText({
     if (e.key === 'Enter' && !multiline) { e.preventDefault(); commit(); }
   };
 
-  if (editing) {
+  if (editing && !readOnly) {
     const shared = {
       value: draft,
       onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -91,8 +94,8 @@ function EditableText({
 
   return (
     <div
-      onClick={() => setEditing(true)}
-      className={`cursor-text rounded-lg px-3 py-2 hover:bg-amber-50 transition-colors text-sm ${className} ${!value ? 'text-gray-400' : ''}`}
+      onClick={() => !readOnly && setEditing(true)}
+      className={`${readOnly ? 'cursor-default' : 'cursor-text hover:bg-amber-50'} rounded-lg px-3 py-2 transition-colors text-sm ${className} ${!value ? 'text-gray-400' : ''}`}
     >
       {value || placeholder}
     </div>
@@ -107,25 +110,28 @@ function SelectPill<T extends string>({
   onSelect,
   renderValue,
   renderOption,
+  readOnly = false,
 }: {
   value: T;
   options: T[];
   onSelect: (v: T) => void;
   renderValue: (v: T) => React.ReactNode;
   renderOption: (v: T) => React.ReactNode;
+  readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-sm transition-all cursor-pointer"
+        onClick={() => !readOnly && setOpen((o) => !o)}
+        disabled={readOnly}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 ${readOnly ? 'cursor-default' : 'hover:bg-gray-200 cursor-pointer'} border border-gray-200 text-sm transition-all`}
       >
         {renderValue(value)}
-        <ChevronDown className="h-3 w-3 text-gray-400" />
+        {!readOnly && <ChevronDown className="h-3 w-3 text-gray-400" />}
       </button>
       <AnimatePresence>
-        {open && (
+        {open && !readOnly && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
             <motion.div
@@ -155,6 +161,7 @@ function SelectPill<T extends string>({
 
 export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses, memberMap }: Props) {
   const { activeOrgId } = useUIStore();
+  const { canEditTasks } = usePermissions(activeOrgId, workspaceId);
   const updateTask = useUpdateTask();
   const { data: orgMembers = [] } = useOrgMembers(activeOrgId);
   const queryClient = useQueryClient();
@@ -250,6 +257,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   onSave={(title) => update({ title })}
                   placeholder="Task title"
                   className="text-lg font-bold text-gray-900 -mx-3 -my-2"
+                  readOnly={!canEditTasks}
                 />
               </div>
 
@@ -260,6 +268,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   value={task.status}
                   options={statuses}
                   onSelect={(status) => update({ status })}
+                  readOnly={!canEditTasks}
                   renderValue={(v) => (
                     <span className="text-xs font-semibold text-amber-600">{v}</span>
                   )}
@@ -275,6 +284,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   value={task.priority}
                   options={PRIORITIES.map((p) => p.value) as typeof task.priority[]}
                   onSelect={(priority) => update({ priority })}
+                  readOnly={!canEditTasks}
                   renderValue={(v) => {
                     const p = PRIORITIES.find((x) => x.value === v)!;
                     return (
@@ -300,6 +310,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   value={task.type}
                   options={Object.keys(TYPE_ICONS) as (keyof typeof TYPE_ICONS)[]}
                   onSelect={(type) => update({ type })}
+                  readOnly={!canEditTasks}
                   renderValue={(v) => {
                     const info = TYPE_ICONS[v];
                     const Icon = info.icon;
@@ -324,6 +335,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                   placeholder="Add a description…"
                   className="text-gray-600 min-h-[80px]"
                   multiline
+                  readOnly={!canEditTasks}
                 />
               </div>
 
@@ -356,32 +368,34 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                     )}
                   </div>
                   {/* Assignee selector */}
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {orgMembers.map((m) => {
-                      const isAssigned = task.assigneeIds.includes(m.userId);
-                      const name = m.user?.name ?? m.userId;
-                      const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
-                      return (
-                        <button
-                          key={m.userId}
-                          title={name}
-                          onClick={() => {
-                            const ids = isAssigned
-                              ? task.assigneeIds.filter((id) => id !== m.userId)
-                              : [...task.assigneeIds, m.userId];
-                            update({ assigneeIds: ids });
-                          }}
-                          className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer ring-2 ${
-                            isAssigned
-                              ? 'ring-amber-400 bg-amber-500 text-white'
-                              : 'ring-gray-200 bg-gray-100 text-gray-500 hover:ring-amber-300'
-                          }`}
-                        >
-                          {initials}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {canEditTasks && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {orgMembers.map((m) => {
+                        const isAssigned = task.assigneeIds.includes(m.userId);
+                        const name = m.user?.name ?? m.userId;
+                        const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+                        return (
+                          <button
+                            key={m.userId}
+                            title={name}
+                            onClick={() => {
+                              const ids = isAssigned
+                                ? task.assigneeIds.filter((id) => id !== m.userId)
+                                : [...task.assigneeIds, m.userId];
+                              update({ assigneeIds: ids });
+                            }}
+                            className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold transition-all cursor-pointer ring-2 ${
+                              isAssigned
+                                ? 'ring-amber-400 bg-amber-500 text-white'
+                                : 'ring-gray-200 bg-gray-100 text-gray-500 hover:ring-amber-300'
+                            }`}
+                          >
+                            {initials}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Due Date only */}
@@ -394,7 +408,10 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                       type="date"
                       value={task.dueDate ? task.dueDate.slice(0, 10) : ''}
                       onChange={(e) => update({ dueDate: e.target.value || null })}
-                      className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+                      disabled={!canEditTasks}
+                      className={`bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-amber-400 ${
+                        canEditTasks ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'
+                      }`}
                     />
                   </div>
                 </div>
@@ -412,17 +429,21 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                       className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 text-[10px] border border-amber-200"
                     >
                       {lbl}
-                      <button
-                        onClick={() => update({ labels: task.labels.filter((l) => l !== lbl) })}
-                        className="hover:text-red-400 transition-colors cursor-pointer"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
+                      {canEditTasks && (
+                        <button
+                          onClick={() => update({ labels: task.labels.filter((l) => l !== lbl) })}
+                          className="hover:text-red-400 transition-colors cursor-pointer"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      )}
                     </span>
                   ))}
-                  <LabelAdder
-                    onAdd={(lbl) => update({ labels: [...(task.labels ?? []), lbl] })}
-                  />
+                  {canEditTasks && (
+                    <LabelAdder
+                      onAdd={(lbl) => update({ labels: [...(task.labels ?? []), lbl] })}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -464,7 +485,7 @@ export default function TaskDetailDrawer({ task, onClose, workspaceId, statuses,
                     memberMap={memberMap}
                   />
                 ) : (
-                  <ActivityFeed entityId={task._id} />
+                  <ActivityFeed entityId={task._id} memberMap={memberMap} />
                 )}
               </div>
             </div>

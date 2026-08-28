@@ -17,8 +17,14 @@ export class CommentsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a comment on a task' })
-  create(@User('sub') userId: string, @Body() dto: CreateCommentDto) {
-    return this.commentsService.create(userId, dto);
+  create(
+    @User('sub') userId: string,
+    @User('name') userName: string,
+    @User('email') userEmail: string,
+    @Body() dto: CreateCommentDto,
+  ) {
+    const actor = (userName && userName !== 'Someone') ? userName : (userEmail || 'Team member');
+    return this.commentsService.create(userId, dto, actor);
   }
 
   @Get()

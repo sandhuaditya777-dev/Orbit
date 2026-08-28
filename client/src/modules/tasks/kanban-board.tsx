@@ -29,6 +29,7 @@ import { useProjectWorkflows } from '@/api/projects';
 import { useOrgMembers } from '@/api/organizations';
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import { usePresence } from '@/hooks/usePresence';
 import CreateTaskDialog from './create-task-dialog';
@@ -101,12 +102,13 @@ interface KanbanCardProps {
   colIdx: number;
   statuses: string[];
   onMoveNext: (task: Task) => void;
-  onDelete:   (task: Task) => void;
-  onClick:    (task: Task) => void;
+  onDelete: (task: Task) => void;
+  onClick: (task: Task) => void;
   isUpdating: boolean;
-  memberMap:  Record<string, { name: string; avatar: string }>;
-  allTasks:   Task[];
+  memberMap: Record<string, { name: string; avatar: string }>;
+  allTasks: Task[];
   isDragOverlay?: boolean;
+  canEdit?: boolean;
 }
 
 interface KanbanCardBodyProps extends KanbanCardProps {
@@ -122,7 +124,7 @@ interface KanbanCardBodyProps extends KanbanCardProps {
 function KanbanCardBody({
   task, colIdx, statuses, onMoveNext, onDelete, onClick,
   isUpdating, memberMap, allTasks, isDragOverlay = false,
-  cardRef, style, isDragging = false, dragHandleProps,
+  cardRef, style, isDragging = false, dragHandleProps, canEdit = true,
 }: KanbanCardBodyProps) {
   const priorityStyle = PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.MEDIUM;
   const showMoveNext  = colIdx < statuses.length - 1;
@@ -138,8 +140,10 @@ function KanbanCardBody({
     <div
       ref={cardRef}
       style={style}
-      {...dragHandleProps}
-      className={`group bg-white border rounded-xl p-3.5 flex flex-col gap-2.5 cursor-grab active:cursor-grabbing transition-all touch-none ${
+      {...(canEdit ? dragHandleProps : {})}
+      className={`group bg-white border rounded-xl p-3.5 flex flex-col gap-2.5 transition-all touch-none ${
+        canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+      } ${
         isDragOverlay
           ? 'border-amber-400/60 shadow-2xl shadow-amber-400/20 rotate-1 scale-105'
           : isDragging
@@ -152,9 +156,11 @@ function KanbanCardBody({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           {/* Drag handle (decorative — the whole card is draggable) */}
-          <div className="opacity-40 group-hover:opacity-100 transition-opacity p-0.5 rounded text-gray-400">
-            <GripVertical className="h-3.5 w-3.5" />
-          </div>
+          {canEdit && (
+            <div className="opacity-40 group-hover:opacity-100 transition-opacity p-0.5 rounded text-gray-400">
+              <GripVertical className="h-3.5 w-3.5" />
+            </div>
+          )}
           {TYPE_ICONS[task.type] || <CheckSquare className="h-3.5 w-3.5 text-gray-400" />}
           <span className="text-[10px] font-mono font-bold text-gray-400 select-all">
             {task.slug}
@@ -164,12 +170,14 @@ function KanbanCardBody({
           <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${priorityStyle}`}>
             {PRIORITY_LABELS[task.priority] || task.priority}
           </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(task); }}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all cursor-pointer"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+          {canEdit && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(task); }}
+              className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all cursor-pointer"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -227,7 +235,7 @@ function KanbanCardBody({
               {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
             </span>
           )}
-          {showMoveNext ? (
+          {showMoveNext && canEdit ? (
             <button
               onClick={(e) => { e.stopPropagation(); onMoveNext(task); }}
               disabled={isUpdating}
@@ -235,9 +243,9 @@ function KanbanCardBody({
             >
               Move <ChevronRight className="h-3 w-3" />
             </button>
-          ) : (
+          ) : !showMoveNext ? (
             <span className="text-[10px] font-bold text-emerald-500">✓ Done</span>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -248,7 +256,7 @@ function KanbanCardBody({
 // each column. The DragOverlay ghost renders KanbanCardBody directly instead.
 const KanbanCard = React.memo((props: KanbanCardProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: props.task._id });
+    useSortable({ id: props.task._id, disabled: !props.canEdit });
 
   const style: React.CSSProperties = {
     transform:  CSS.Transform.toString(transform),
@@ -272,7 +280,7 @@ KanbanCard.displayName = 'KanbanCard';
 // ── Column drop zone ─────────────────────────────────────────────
 function DroppableColumn({
   status, colIdx, tasks, statuses, onMoveNext, onDelete, onClick,
-  isUpdating, memberMap, allTasks, openCreate,
+  isUpdating, memberMap, allTasks, openCreate, canEdit = true,
 }: {
   status: string;
   colIdx: number;
@@ -285,6 +293,7 @@ function DroppableColumn({
   memberMap:  Record<string, { name: string; avatar: string }>;
   allTasks:   Task[];
   openCreate: (s: string) => void;
+  canEdit?: boolean;
 }) {
   const dotColor = STATUS_COLORS[colIdx] || 'bg-slate-400';
   const taskIds  = tasks.map((t) => t._id);
@@ -292,7 +301,7 @@ function DroppableColumn({
   // Registers the column itself as a drop target — without this, dropping on
   // empty space (or an empty column) never resolves to this status, since
   // only individual cards are sortable/droppable.
-  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const { setNodeRef, isOver } = useDroppable({ id: status, disabled: !canEdit });
 
   return (
     <div
@@ -310,12 +319,14 @@ function DroppableColumn({
             {tasks.length}
           </span>
         </div>
-        <button
-          onClick={() => openCreate(status)}
-          className="p-1 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors cursor-pointer"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => openCreate(status)}
+            className="p-1 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Sortable task cards */}
@@ -334,6 +345,7 @@ function DroppableColumn({
                 isUpdating={isUpdating}
                 memberMap={memberMap}
                 allTasks={allTasks}
+                canEdit={canEdit}
               />
             ))}
           </AnimatePresence>
@@ -356,11 +368,12 @@ function DroppableColumn({
 // ── Main KanbanBoard ─────────────────────────────────────────────
 export default function KanbanBoard({ projectId, workspaceId, projectName, statuses }: Props) {
   const [createOpen,   setCreateOpen]   = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filters,      setFilters]      = useState<KanbanFilters>(EMPTY_FILTERS);
   const [activeTask,   setActiveTask]   = useState<Task | null>(null);   // dnd drag overlay
 
   const { activeOrgId } = useUIStore();
+  const { canEditTasks } = usePermissions(activeOrgId, workspaceId);
   const { user }         = useAuthStore();
 
   const { data: tasks = [], isLoading: tasksLoading, error } = useTasks(projectId);
@@ -545,9 +558,11 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
               </div>
             )}
 
-            <Button onClick={() => openCreateForColumn(boardStatuses[0])} variant="default" className="shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-white border-0">
-              <Plus className="h-4 w-4" /> Add Task
-            </Button>
+            {canEditTasks && (
+              <Button onClick={() => openCreateForColumn(boardStatuses[0])} variant="default" className="shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-white border-0">
+                <Plus className="h-4 w-4" /> Add Task
+              </Button>
+            )}
           </div>
         </div>
 
@@ -579,6 +594,7 @@ export default function KanbanBoard({ projectId, workspaceId, projectName, statu
               memberMap={memberMap}
               allTasks={tasks}
               openCreate={openCreateForColumn}
+              canEdit={canEditTasks}
             />
           ))}
         </div>

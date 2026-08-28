@@ -15,8 +15,14 @@ import {
   OrganizationMember,
   OrganizationMemberDocument,
 } from '../../database/schemas/organization-member.schema';
-import { Workspace, WorkspaceDocument } from '../../database/schemas/workspace.schema';
-import { OrgInvite, OrgInviteDocument } from '../../database/schemas/org-invite.schema';
+import {
+  Workspace,
+  WorkspaceDocument,
+} from '../../database/schemas/workspace.schema';
+import {
+  OrgInvite,
+  OrgInviteDocument,
+} from '../../database/schemas/org-invite.schema';
 import {
   CreateOrganizationDto,
   UpdateOrganizationDto,
@@ -74,7 +80,8 @@ export class OrganizationsService {
     organizationId: string,
   ): Promise<OrganizationMemberDocument> {
     const m = await this.getMembership(userId, organizationId);
-    if (!m) throw new ForbiddenException('You are not a member of this organization');
+    if (!m)
+      throw new ForbiddenException('You are not a member of this organization');
     return m;
   }
 
@@ -118,17 +125,15 @@ export class OrganizationsService {
   }
 
   async findAllForUser(userId: string): Promise<OrganizationDocument[]> {
-    const memberships = await this.memberModel.find({ userId });
+    const memberships = await this.memberModel.find({ userId: userId });
+
     const orgIds = memberships.map((m) => m.organizationId);
     return this.orgModel
       .find({ _id: { $in: orgIds }, isArchived: false })
       .sort({ createdAt: -1 });
   }
 
-  async findOne(
-    orgId: string,
-    userId: string,
-  ): Promise<OrganizationDocument> {
+  async findOne(orgId: string, userId: string): Promise<OrganizationDocument> {
     await this.requireMembership(userId, orgId);
     const org = await this.orgModel.findById(orgId);
     if (!org) throw new NotFoundException('Organization not found');
@@ -141,7 +146,9 @@ export class OrganizationsService {
     dto: UpdateOrganizationDto,
   ): Promise<OrganizationDocument> {
     await this.requireRole(userId, orgId, ['OWNER', 'MANAGER']);
-    const org = await this.orgModel.findByIdAndUpdate(orgId, dto, { new: true });
+    const org = await this.orgModel.findByIdAndUpdate(orgId, dto, {
+      new: true,
+    });
     if (!org) throw new NotFoundException('Organization not found');
     return org;
   }
@@ -156,7 +163,10 @@ export class OrganizationsService {
     if (!org) throw new NotFoundException('Organization not found');
 
     // Cascade archive to workspaces
-    await this.workspaceModel.updateMany({ organizationId: orgId }, { isArchived: true });
+    await this.workspaceModel.updateMany(
+      { organizationId: orgId },
+      { isArchived: true },
+    );
 
     return org;
   }
@@ -175,7 +185,9 @@ export class OrganizationsService {
 
   async listMembers(orgId: string, userId: string) {
     await this.requireMembership(userId, orgId);
-    const members = await this.memberModel.find({ organizationId: orgId }).exec();
+    const members = await this.memberModel
+      .find({ organizationId: orgId })
+      .exec();
 
     // Populate user profiles
     const populated = await Promise.all(
@@ -183,9 +195,11 @@ export class OrganizationsService {
         const u = await this.usersService.findById(m.userId);
         return {
           ...m.toObject(),
-          user: u ? { name: u.name, email: u.email, avatar: u.avatar } : undefined,
+          user: u
+            ? { name: u.name, email: u.email, avatar: u.avatar }
+            : undefined,
         };
-      })
+      }),
     );
     return populated;
   }
@@ -236,7 +250,12 @@ export class OrganizationsService {
   async sendInvite(
     orgId: string,
     inviterId: string,
-    dto: { email: string; role?: string; inviterName?: string; orgName?: string },
+    dto: {
+      email: string;
+      role?: string;
+      inviterName?: string;
+      orgName?: string;
+    },
   ): Promise<{ type: 'added' | 'invited'; message: string }> {
     await this.requireRole(inviterId, orgId, ['OWNER', 'MANAGER']);
 
@@ -252,9 +271,14 @@ export class OrganizationsService {
 
     if (existingUser) {
       // Check if already a member
-      const alreadyMember = await this.getMembership(existingUser._id as string, orgId);
+      const alreadyMember = await this.getMembership(
+        existingUser._id as string,
+        orgId,
+      );
       if (alreadyMember) {
-        throw new ConflictException('This user is already a member of the organization');
+        throw new ConflictException(
+          'This user is already a member of the organization',
+        );
       }
 
       // Add directly
@@ -301,7 +325,12 @@ export class OrganizationsService {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const inviteUrl = `${appUrl}?invite_token=${token}`;
 
-    this.mailService.sendInvite({ to: dto.email, orgName, inviterName, inviteUrl });
+    this.mailService.sendInvite({
+      to: dto.email,
+      orgName,
+      inviterName,
+      inviteUrl,
+    });
 
     return {
       type: 'invited',
@@ -319,12 +348,18 @@ export class OrganizationsService {
   ): Promise<OrganizationDocument> {
     const invite = await this.inviteModel.findOne({ token });
 
-    if (!invite) throw new NotFoundException('Invite not found or already used');
-    if (invite.usedAt) throw new GoneException('This invite has already been used');
-    if (invite.expiresAt < new Date()) throw new GoneException('This invite has expired');
+    if (!invite)
+      throw new NotFoundException('Invite not found or already used');
+    if (invite.usedAt)
+      throw new GoneException('This invite has already been used');
+    if (invite.expiresAt < new Date())
+      throw new GoneException('This invite has expired');
 
     // Idempotent — silently skip if already a member
-    const alreadyMember = await this.getMembership(userId, invite.organizationId);
+    const alreadyMember = await this.getMembership(
+      userId,
+      invite.organizationId,
+    );
     if (!alreadyMember) {
       await this.memberModel.create({
         userId,

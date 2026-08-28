@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import { getSocket } from '@/lib/socket';
 import { useSocketStore } from '@/store/socket.store';
 
+const EMPTY_PRESENCE: string[] = [];
+
 /**
  * Join a socket room for presence tracking.
  * Automatically leaves the room on unmount / projectId change.
@@ -32,6 +34,6 @@ export function usePresence(projectId: string | null, userId: string | null) {
   }, [projectId, userId, setRoomPresence]);
 
   const room = projectId ? `project:${projectId}` : null;
-  const onlineUsers = useSocketStore((s) => (room ? (s.roomPresence[room] ?? []) : []));
+  const onlineUsers = useSocketStore((s) => (room && s.roomPresence[room] ? s.roomPresence[room] : EMPTY_PRESENCE));
   return onlineUsers;
 }

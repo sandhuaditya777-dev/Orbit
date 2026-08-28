@@ -38,10 +38,11 @@ function timeAgo(dateStr: string): string {
 interface Props {
   entityId: string;
   className?: string;
+  memberMap?: Record<string, { name: string; avatar: string }>;
 }
 
-export default function ActivityFeed({ entityId, className = '' }: Props) {
-  const { data: initial = [], isLoading } = useQuery({
+export default function ActivityFeed({ entityId, className = '', memberMap }: Props) {
+  const { data: initial, isLoading } = useQuery({
     queryKey: ['activity', entityId],
     queryFn: () => fetchActivityForEntity(entityId, 50),
     staleTime: 30_000,
@@ -50,7 +51,9 @@ export default function ActivityFeed({ entityId, className = '' }: Props) {
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
 
   useEffect(() => {
-    setEntries(initial);
+    if (initial) {
+      setEntries(initial);
+    }
   }, [initial]);
 
   // Listen for realtime activity events on the project room
@@ -90,6 +93,10 @@ export default function ActivityFeed({ entityId, className = '' }: Props) {
         {entries.map((entry) => {
           const dot = ACTION_COLORS[entry.action] ?? 'bg-gray-400';
           const label = ACTION_LABELS[entry.action] ?? entry.action.toLowerCase();
+          const actorDisplayName =
+            entry.actorName && entry.actorName !== 'Someone'
+              ? entry.actorName
+              : memberMap?.[entry.actorId]?.name || entry.actorName || 'Team member';
 
           return (
             <div key={entry._id} className="relative group text-left">
@@ -100,7 +107,7 @@ export default function ActivityFeed({ entityId, className = '' }: Props) {
 
               <div className="bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:border-gray-300 transition-colors">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-gray-800 text-xs">{entry.actorName}</span>
+                  <span className="font-semibold text-gray-800 text-xs">{actorDisplayName}</span>
                   <span className="text-gray-500 text-xs">{label}</span>
                   {entry.action === 'STATUS_CHANGED' && entry.metadata && (
                     <>

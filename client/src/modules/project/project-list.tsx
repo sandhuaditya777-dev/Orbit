@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Plus, FolderKanban, Loader2, ChevronRight } from 'lucide-react';
 import { useProjects } from '@/api/projects';
 import type { Project } from '@/api/types';
+import { useUIStore } from '@/store/ui.store';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -79,6 +81,8 @@ ProjectItem.displayName = 'ProjectItem';
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function ProjectList({ workspaceId, activeProjectId, onSelect, onCreateClick }: Props) {
+  const { activeOrgId } = useUIStore();
+  const { canCreateProject } = usePermissions(activeOrgId, workspaceId);
   const { data: projects = [], isLoading, error } = useProjects(workspaceId);
 
   return (
@@ -88,16 +92,18 @@ export default function ProjectList({ workspaceId, activeProjectId, onSelect, on
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest select-none">
           Projects
         </span>
-        <Button
-          onClick={onCreateClick}
-          disabled={!workspaceId}
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-slate-500 hover:text-slate-300 focus-visible:ring-0 cursor-pointer"
-          title="New Project"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
+        {canCreateProject && (
+          <Button
+            onClick={onCreateClick}
+            disabled={!workspaceId}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-slate-500 hover:text-slate-300 focus-visible:ring-0 cursor-pointer"
+            title="New Project"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
 
       {/* Loading */}
@@ -130,13 +136,19 @@ export default function ProjectList({ workspaceId, activeProjectId, onSelect, on
 
       {/* Empty */}
       {!isLoading && !error && workspaceId && projects.length === 0 && (
-        <button
-          onClick={onCreateClick}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-400 transition-colors text-xs cursor-pointer"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Create first project
-        </button>
+        canCreateProject ? (
+          <button
+            onClick={onCreateClick}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-400 transition-colors text-xs cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Create first project
+          </button>
+        ) : (
+          <p className="text-xs text-slate-400 px-3 py-2 select-none italic">
+            No projects in this workspace
+          </p>
+        )
       )}
 
       {/* Project list */}

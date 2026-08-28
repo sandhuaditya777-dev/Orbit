@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ChevronDown, Plus, Check, FolderOpen } from 'lucide-react';
 import { useWorkspaces } from '@/api/workspaces';
 import type { Workspace } from '@/api/types';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ interface Props {
 
 export default function WorkspaceSwitcher({ orgId, activeWorkspaceId, onSelect, onCreateClick }: Props) {
   const { data: workspaces = [], isLoading } = useWorkspaces(orgId);
+  const { canCreateWorkspace } = usePermissions(orgId, activeWorkspaceId);
 
   const active = React.useMemo(
     () => workspaces.find((w) => w._id === activeWorkspaceId) ?? null,
@@ -87,16 +89,20 @@ export default function WorkspaceSwitcher({ orgId, activeWorkspaceId, onSelect, 
           ))
         )}
 
-        <DropdownMenuSeparator className="bg-slate-200" />
-        <DropdownMenuItem
-          onClick={onCreateClick}
-          className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-slate-100"
-        >
-          <div className="h-6 w-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
-            <Plus className="h-3 w-3 text-slate-500" />
-          </div>
-          <span className="text-sm font-medium">New Workspace</span>
-        </DropdownMenuItem>
+        {canCreateWorkspace && (
+          <>
+            <DropdownMenuSeparator className="bg-slate-200" />
+            <DropdownMenuItem
+              onClick={onCreateClick}
+              className="flex items-center gap-2.5 px-3 py-2 cursor-pointer text-slate-700 hover:text-slate-900 focus:bg-slate-100"
+            >
+              <div className="h-6 w-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                <Plus className="h-3 w-3 text-slate-500" />
+              </div>
+              <span className="text-sm font-medium">New Workspace</span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

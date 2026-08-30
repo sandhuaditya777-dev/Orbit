@@ -14,15 +14,33 @@ async function bootstrap() {
   // Enable CORS
   const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
     .split(',')
-    .map((o) => o.trim());
+    .map((o) => o.trim().replace(/\/+$/, ''));
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
+      // Allow requests with no origin (mobile apps, curl, Postman, server-to-server)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      
+      const cleanOrigin = origin.trim().replace(/\/+$/, '');
+
+      // Allow if explicit match, wildcard, or if any *.vercel.app domain is allowed
+      const isAllowed =
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(cleanOrigin) ||
+        allowedOrigins.some((allowed) => {
+          if (allowed.startsWith('*.')) {
+            const domain = allowed.slice(2);
+            return cleanOrigin.endsWith(domain);
+          }
+          return false;
+        }) ||
+        // Auto-allow vercel app domains if CLIENT_URL contains vercel.app
+        (allowedOrigins.some((a) => a.includes('vercel.app')) && cleanOrigin.endsWith('.vercel.app'));
+
+      if (isAllowed) {
         return callback(null, true);
       }
+
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,

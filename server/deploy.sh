@@ -46,8 +46,9 @@ echo "Starting Backend Build & Deployment to $EC2_USER@$EC2_IP..."
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-# 1. Build locally
-echo "Building NestJS backend..."
+# 1. Clean and Build locally
+echo "Cleaning and Building NestJS backend..."
+rm -rf dist
 pnpm build
 
 if [ ! -d "dist" ]; then
@@ -59,7 +60,7 @@ fi
 echo "Preparing remote directory ($REMOTE_DIR)..."
 ssh -i "$ABSOLUTE_KEY_PATH" -o StrictHostKeyChecking=no "$EC2_USER@$EC2_IP" "mkdir -p $REMOTE_DIR"
 
-# 3. Create zip bundle (uses tar as fallback if zip utility not present on local machine)
+# 3. Create tar bundle
 echo "Creating deployment package..."
 rm -f deploy-package.tar.gz
 tar -czf deploy-package.tar.gz dist package.json pnpm-lock.yaml ecosystem.config.js
@@ -71,9 +72,9 @@ scp -i "$ABSOLUTE_KEY_PATH" -o StrictHostKeyChecking=no deploy-package.tar.gz "$
 # Clean up local package
 rm -f deploy-package.tar.gz
 
-# 5. Extract & restart PM2 process on EC2
+# 5. Extract & restart PM2 process on EC2 (run in login shell to load PATH for node/pnpm/pm2)
 echo "Extracting and restarting PM2 process on EC2..."
-REMOTE_CMD="cd $REMOTE_DIR && tar -xzf deploy-package.tar.gz && rm deploy-package.tar.gz && pnpm install --prod --frozen-lockfile && (pm2 reload orbit-backend || pm2 start ecosystem.config.js) && pm2 save"
+REMOTE_CMD="bash -l -c 'cd $REMOTE_DIR && tar -xzf deploy-package.tar.gz && rm deploy-package.tar.gz && (pnpm install --prod || npm install --production) && (pm2 delete orbit-backend || true) && pm2 start ecosystem.config.js && pm2 save'"
 
 ssh -i "$ABSOLUTE_KEY_PATH" -o StrictHostKeyChecking=no "$EC2_USER@$EC2_IP" "$REMOTE_CMD"
 
